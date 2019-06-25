@@ -30,6 +30,8 @@ dependencies:
   event_bus: ^1.1.0
   flutter_swiper: ^1.1.6
   cached_network_image: ^0.8.0
+  sqflite: ^1.1.5
+  path_provider: any # 使用any解决与cached_network_image版本的冲突
 
 dev_dependencies:
   flutter_test:

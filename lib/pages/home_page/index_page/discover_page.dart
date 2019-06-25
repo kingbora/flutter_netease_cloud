@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_netease_cloud/config/constants.dart';
 import 'package:flutter_netease_cloud/services/discovery/discover_service.dart';
 import 'package:flutter_netease_cloud/states/discovery_state/discovery_state.dart';
+import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
 import 'package:flutter_netease_cloud/widgets/search_bar_delegate/search_bar_delegate.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -22,11 +23,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   void initState() {
-    // bannerList = DiscoverService.getBannerList();
-    // recommedSongList = DiscoverService.getRecommendSongList();
-    // newSongsList = DiscoverService.getNewSongList();
-    // newAlbumsList =
-    //     DiscoverService.getNewAlbumList(const {"offset": 0, "limit": 3});
+    bannerList = DiscoverService.getBannerList();
+    recommedSongList = DiscoverService.getRecommendSongList();
+    newSongsList = DiscoverService.getNewSongList();
+    newAlbumsList =
+        DiscoverService.getNewAlbumList(const {"offset": 0, "limit": 3});
     super.initState();
   }
 
@@ -68,8 +69,36 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
+    // return Scaffold(
+    //   appBar: AppBar(
+    //     leading: IconButton(
+    //         padding: EdgeInsets.zero,
+    //         icon: Image.asset(
+    //           "assets/images/microphone.png",
+    //           color: Colors.black,
+    //           width: 24,
+    //           height: 24,
+    //         ),
+    //         onPressed: () {},
+    //       ),
+    //     titleSpacing: 0,
+    //     centerTitle: true,
+    //     title: searchBar,
+    //     actions: <Widget>[
+    //       Container(
+    //         width: kToolbarHeight,
+    //         height: kToolbarHeight,
+    //       )
+    //     ],
+    //     elevation: 0.0,
+    //     backgroundColor: Colors.white,
+    //   ),
+    //   body: Center(
+    //     child: Text("DiscoverPage"),
+    //   ),
+    // );
     return Scaffold(
-      appBar: AppBar(
+       appBar: AppBar(
         leading: IconButton(
             padding: EdgeInsets.zero,
             icon: Image.asset(
@@ -84,39 +113,31 @@ class _DiscoverPageState extends State<DiscoverPage> {
         centerTitle: true,
         title: searchBar,
         actions: <Widget>[
-          Container(
-            width: kToolbarHeight,
-            height: kToolbarHeight,
-          )
+          MusicPlayerWave()
         ],
         elevation: 0.0,
         backgroundColor: Colors.white,
       ),
-      body: Center(
-        child: Text("DiscoverPage"),
+      body: ListView(
+        // padding: Constants.safeEdge,
+        children: <Widget>[
+          BannerList(
+            bannerList: bannerList,
+          ),
+          SubNav(),
+          RecommendedSongList(
+            recommendSongList: recommedSongList,
+          ),
+          ChangeNotifierProvider<DiscoveryState>(
+            builder: (_) => DiscoveryState(),
+            child: NewSongAndAlbums(
+              newAlbumsList: newAlbumsList,
+              newSongsList: newSongsList,
+            ),
+          )
+        ],
       ),
     );
-    // return Scaffold(
-    //   body: ListView(
-    //     // padding: Constants.safeEdge,
-    //     children: <Widget>[
-    //       BannerList(
-    //         bannerList: bannerList,
-    //       ),
-    //       SubNav(),
-    //       RecommendedSongList(
-    //         recommendSongList: recommedSongList,
-    //       ),
-    //       ChangeNotifierProvider<DiscoveryState>(
-    //         builder: (_) => DiscoveryState(),
-    //         child: NewSongAndAlbums(
-    //           newAlbumsList: newAlbumsList,
-    //           newSongsList: newSongsList,
-    //         ),
-    //       )
-    //     ],
-    //   ),
-    // );
   }
 }
 

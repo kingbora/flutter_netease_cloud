@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
 
 class SettingPage extends StatelessWidget {
   @override
@@ -6,6 +7,10 @@ class SettingPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("设置"),
+        centerTitle: true,
+        actions: <Widget>[
+          MusicPlayerWave()
+        ],
       ),
     );
   }

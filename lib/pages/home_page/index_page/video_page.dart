@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
 import 'package:flutter_netease_cloud/widgets/search_bar_delegate/search_bar_delegate.dart';
 
 class VideoPage extends StatefulWidget {
@@ -60,10 +61,7 @@ class _VideoPageState extends State<VideoPage> {
         centerTitle: true,
         title: searchBar,
         actions: <Widget>[
-          Container(
-            width: kToolbarHeight,
-            height: kToolbarHeight,
-          )
+          MusicPlayerWave()
         ],
       ),
       body: Center(

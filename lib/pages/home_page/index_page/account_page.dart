@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_netease_cloud/config/constants.dart';
 import 'package:flutter_netease_cloud/routes/router.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
 
 class AccountPage extends StatefulWidget {
   @override
@@ -95,10 +96,7 @@ class _AccountPageState extends State<AccountPage>
           ),
         ),
         actions: <Widget>[
-          Container(
-            width: kToolbarHeight,
-            height: kToolbarHeight,
-          )
+          MusicPlayerWave()
         ],
       ),
       backgroundColor: Color(0xFFf8f8f8),
@@ -136,7 +134,7 @@ class _AccountPageState extends State<AccountPage>
         },
         child: ListView(
           controller: _scrollController,
-          physics: const ClampingScrollPhysics(),
+          physics: getScrollPhysics(context),
           children: <Widget>[
             Container(
               decoration: BoxDecoration(

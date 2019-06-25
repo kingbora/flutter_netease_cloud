@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
 
 class MinePage extends StatefulWidget {
   @override
@@ -29,10 +30,7 @@ class _MinePageState extends State<MinePage> {
           ),
         ),
         actions: <Widget>[
-          Container(
-            width: kToolbarHeight,
-            height: kToolbarHeight,
-          )
+          MusicPlayerWave()
         ],
       ),
       body: Center(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_netease_cloud/config/constants.dart';
+import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
 
 class FriendPage extends StatefulWidget {
   @override
@@ -61,10 +62,7 @@ class _FriendPageState extends State<FriendPage>
           ),
         ),
         actions: <Widget>[
-          Container(
-            width: kToolbarHeight,
-            height: kToolbarHeight,
-          )
+          MusicPlayerWave()
         ],
       ),
       body: Container(

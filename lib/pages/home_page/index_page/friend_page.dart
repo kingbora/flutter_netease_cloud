@@ -10,10 +10,16 @@ class FriendPage extends StatefulWidget {
 class _FriendPageState extends State<FriendPage>
     with SingleTickerProviderStateMixin {
   TabController _tabController;
+  double distance = 55;
 
   @override
   void initState() {
     _tabController = new TabController(initialIndex: 0, length: 2, vsync: this);
+    _tabController.animation.addListener(() {
+      setState(() {
+        
+      });
+    });
     super.initState();
   }
 
@@ -39,36 +45,49 @@ class _FriendPageState extends State<FriendPage>
             ),
             borderRadius: BorderRadius.circular(15),
           ),
-          width: 110,
+          width: distance * 2,
           height: 30,
-          child: TabBar(
-            labelPadding: EdgeInsets.zero,
-            indicatorWeight: 0.0001,
-            controller: _tabController,
-            isScrollable: false,
-            labelStyle: TextStyle(
-              fontSize: 13,
-            ),
-            labelColor: Colors.black,
-            unselectedLabelColor: Constants.themeColor,
-            tabs: <Widget>[
-              Tab(
-                text: "动态",
+          child: Stack(
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.only(
+                  left: _tabController.animation.value * distance,
+                ),
+                height: 30,
+                width: distance,
+                decoration: BoxDecoration(
+                  gradient: Constants.customGradient,
+                  borderRadius: BorderRadius.circular(15),
+                ),
               ),
-              Tab(
-                text: "附近",
-              )
+              TabBar(
+                labelPadding: EdgeInsets.zero,
+                indicatorWeight: 0.0001,
+                controller: _tabController,
+                isScrollable: false,
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: Constants.themeColor,
+                tabs: <Widget>[
+                  Tab(
+                    text: "动态",
+                  ),
+                  Tab(
+                    text: "附近",
+                  )
+                ],
+              ),
             ],
           ),
         ),
-        actions: <Widget>[
-          MusicPlayerWave()
-        ],
+        actions: <Widget>[MusicPlayerWave()],
       ),
       body: Container(
         child: TabBarView(
           controller: _tabController,
-          physics: const NeverScrollableScrollPhysics(),
+          // physics: const NeverScrollableScrollPhysics(),
           children: <Widget>[
             Center(
               child: Text("动态"),

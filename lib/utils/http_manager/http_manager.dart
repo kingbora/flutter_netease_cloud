@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_netease_cloud/config/config.dart';
+import 'package:flutter_netease_cloud/utils/http_manager/response_format.dart';
+import 'package:flutter_netease_cloud/utils/http_manager/status_code.dart';
 
 /// http请求
 class HttpManager {
@@ -52,7 +54,7 @@ class HttpManager {
 
   /// 发起http请求
   /// [request] http参数配置
-  fetch(HttpRequests request) async {
+  Future<ResponseFormat> fetch(HttpRequests request) async {
     Response response;
 
     try {
@@ -74,9 +76,20 @@ class HttpManager {
           cancelToken: request.cancelToken,
         );
       }
-    } on DioError catch (e) {}
+    } on DioError catch (e) {
+      return handlerError(e);
+    }
 
-    return response;
+    if (response.data is DioError) {
+      return handlerError(response.data);
+    }
+
+    return ResponseFormat(
+      data: response.data,
+      hasError: false,
+      statusCode: response.statusCode,
+      headers: response.headers
+    );
   }
 
   /// 批量请求
@@ -89,14 +102,14 @@ class HttpManager {
     try {
       response = await _dio.download(urlPath, savePath, onReceiveProgress: onReceiveProgress, options: option,);
     } on DioError catch (e) {
-
+      handlerError(e);
     }
 
     return response;
   }
 
   uploadFile(File file, HttpRequests request) async {
-    Response response;
+    ResponseFormat response;
     String path = file.path;
     var name = path.substring(path.lastIndexOf("/") + 1, path.length);
     var suffix = name.substring(name.lastIndexOf(".") + 1, name.length);
@@ -118,6 +131,26 @@ class HttpManager {
     if (!token.isCancelled) {
       token.cancel("cancelled");
     }
+  }
+
+  ResponseFormat handlerError(DioError e) {
+    Response errorResponse;
+    if (e.response != null) {
+      errorResponse = e.response;
+    } else {
+      errorResponse = new Response(statusCode: StatusCode.UNKNOWN_ERROR);
+    }
+
+    if (e.type == DioErrorType.CONNECT_TIMEOUT || e.type == DioErrorType.RECEIVE_TIMEOUT) {
+      errorResponse.statusCode = StatusCode.NETWORK_TIMEOUT;
+    }
+
+    return ResponseFormat(
+      data: StatusCode.emit(errorResponse),
+      hasError: true,
+      statusCode: errorResponse.statusCode,
+      headers: errorResponse.headers
+    );
   }
 }
 

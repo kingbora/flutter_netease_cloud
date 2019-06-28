@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_netease_cloud/routes/router.dart';
 
 class MusicPlayerWave extends StatelessWidget {
   @override
@@ -16,7 +17,9 @@ class MusicPlayerWave extends StatelessWidget {
           width: 24,
           height: 24,
         ),
-        onPressed: () {},
+        onPressed: () {
+          Routes.routers.navigateTo(context, Routes.musicPlayer);
+        },
       ),
     );
   }

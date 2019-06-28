@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter_netease_cloud/pages/home_page/home_page.dart';
 import 'package:flutter_netease_cloud/pages/home_page/setting_page/setting_page.dart';
+import 'package:flutter_netease_cloud/pages/music_player/music_player.dart';
 import 'package:flutter_netease_cloud/pages/not_found_page/not_found_page.dart';
 import 'package:flutter_netease_cloud/pages/splash_page/splash_page.dart';
 
@@ -23,5 +24,11 @@ var settingPageHandler = new Handler(
 var splashPageHandler = new Handler(
   handlerFunc: (BuildContext context, Map<String, List<String>> params) {
     return SplashPage();
+  }
+);
+
+var musicPlayerHandler = new Handler(
+  handlerFunc: (BuildContext context, Map<String, List<String>> params) {
+    return MusicPlayer();
   }
 );

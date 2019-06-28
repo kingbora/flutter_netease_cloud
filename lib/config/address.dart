@@ -13,14 +13,14 @@ class Address {
   }
 
   static getRecommendSongList() {
-    return "$baseUrl/personalized";
+    return "$baseUrl/personalized?type=500";
   }
 
   static getNewSongList() {
-    return "$baseUrl/personalized/newsong";
+    return "$baseUrl/top/song";
   }
 
   static getNewAlbumList() {
-    return "$baseUrl/top/album";
+    return "$baseUrl/album/newest";
   }
 }

@@ -6,6 +6,9 @@ A new Flutter project.利用Flutter高仿网易云音乐APP，后端接口主要
 ![](docs/images/preview_home.png)
 ![](docs/images/preview_account.png)
 
+## 命令
+`flutter packages pub run build_runner build`
+
 ## 清单
 
 * [x] 引导页和闪屏页，[flutter_swiper](https://pub.flutter-io.cn/packages/flutter_swiper)

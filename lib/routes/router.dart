@@ -6,6 +6,7 @@ class Routes {
   static String homePage = "/home_page";
   static String settingPage = "/setting_page";
   static String splashPage = "/splash_page";
+  static String musicPlayer = "/music_player";
 
   static void configureRoutes(Router router) {
     router.notFoundHandler = notFoundPageHandler;
@@ -13,5 +14,6 @@ class Routes {
     router.define(homePage, handler: homePageHandler, transitionType: TransitionType.fadeIn);
     router.define(settingPage, handler: settingPageHandler, transitionType: TransitionType.inFromRight);
     router.define(splashPage, handler: splashPageHandler, transitionType: TransitionType.fadeIn);
+    router.define(musicPlayer, handler: musicPlayerHandler, transitionType: TransitionType.inFromRight);
   }
 }

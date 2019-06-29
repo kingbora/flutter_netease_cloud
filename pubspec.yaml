@@ -34,6 +34,7 @@ dependencies:
   path_provider: any # 使用any解决与cached_network_image版本的冲突
   json_annotation: ^2.4.0
   fluttertoast: ^3.1.0
+  sticky_headers: ^0.1.8
 
 dev_dependencies:
   # flutter_test:

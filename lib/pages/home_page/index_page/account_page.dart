@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_netease_cloud/config/constants.dart';
 import 'package:flutter_netease_cloud/routes/router.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_netease_cloud/widgets/custom_list/custom_list.dart';
 import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
 
 class AccountPage extends StatefulWidget {
@@ -61,10 +62,10 @@ class _AccountPageState extends State<AccountPage>
 
   ScrollPhysics getScrollPhysics(BuildContext context) {
     switch (defaultTargetPlatform) {
-    case TargetPlatform.iOS:
+      case TargetPlatform.iOS:
         return const BouncingScrollPhysics();
-    case TargetPlatform.android:
-    case TargetPlatform.fuchsia:
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
         return const ClampingScrollPhysics();
     }
     return null;
@@ -95,9 +96,7 @@ class _AccountPageState extends State<AccountPage>
             ),
           ),
         ),
-        actions: <Widget>[
-          MusicPlayerWave()
-        ],
+        actions: <Widget>[MusicPlayerWave()],
       ),
       backgroundColor: Color(0xFFf8f8f8),
       body: OverscrollNotificationWidget(
@@ -589,32 +588,54 @@ class SettingList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Column(
-        children: <Widget>[
-          _getListItem("assets/images/setting.png", "设置", arrow, onClick: () {
-            Routes.routers.navigateTo(context, Routes.settingPage);
-          }),
-          _getListItem(
-            "assets/images/light_mode.png",
-            "夜间模式",
-            CupertinoSwitch(
+      child: CustomList(
+        children: [
+          CustomListItem(
+            leading: "assets/images/setting.png",
+            title: "设置",
+            onClick: () {
+              Routes.routers.navigateTo(context, Routes.settingPage);
+            },
+          ),
+          CustomListItem(
+            leading: "assets/images/light_mode.png",
+            title: "夜间模式",
+            trail: CupertinoSwitch(
               activeColor: Constants.themeColor,
               value: false,
               onChanged: (isCheckd) {},
             ),
           ),
-          _getListItem("assets/images/timer.png", "定时关闭", arrow),
-          _getListItem("assets/images/clock.png", "音乐闹钟", arrow,
-              hasDivider: false),
+          CustomListItem(
+            leading: "assets/images/timer.png",
+            title: "定时关闭",
+          ),
+          CustomListItem(
+            leading: "assets/images/clock.png",
+            title: "音乐闹钟",
+          ),
           divider,
-          _getListItem("assets/images/free_net_flow.png", "在线听歌免流量", arrow),
-          _getListItem("assets/images/coupon.png", "优惠券", arrow,
-              hasDivider: false),
+          CustomListItem(
+            leading: "assets/images/free_net_flow.png",
+            title: "在线听歌免流量",
+          ),
+          CustomListItem(
+            leading: "assets/images/coupon.png",
+            title: "优惠券",
+          ),
           divider,
-          _getListItem("assets/images/music_circle.png", "加入网易音乐人", arrow),
-          _getListItem("assets/images/share.png", "分享网易云音乐", arrow),
-          _getListItem("assets/images/about.png", "关于", arrow,
-              hasDivider: false),
+          CustomListItem(
+            leading: "assets/images/music_circle.png",
+            title: "加入网易音乐人",
+          ),
+          CustomListItem(
+            leading: "assets/images/share.png",
+            title: "分享网易云音乐",
+          ),
+          CustomListItem(
+            leading: "assets/images/about.png",
+            title: "关于",
+          ),
           divider,
           FlatButton(
             color: Colors.white,
@@ -643,70 +664,6 @@ class SettingList extends StatelessWidget {
         width: double.infinity,
         height: 10,
       );
-
-  Widget _getListItem(String leadingImg, String title, Widget trailingImg,
-      {bool hasDivider = true, VoidCallback onClick}) {
-    final double height = 10;
-    Widget item = Container(
-      padding: Constants.safeEdge,
-      color: Colors.white,
-      child: Row(
-        children: <Widget>[
-          Container(
-            padding: EdgeInsets.only(
-              right: Constants.safeEdge.right,
-              top: height,
-              bottom: height,
-            ),
-            child: Image.asset(
-              leadingImg,
-              width: 24,
-              color: Color(0xFF333333),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.only(
-                top: height,
-                bottom: height,
-              ),
-              decoration: BoxDecoration(
-                border: hasDivider
-                    ? Border(
-                        bottom: BorderSide(
-                        color: Color(0xFFe6e6e6),
-                        width: 0.5,
-                      ))
-                    : null,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: Color(0xFF333333),
-                      fontSize: 15,
-                    ),
-                  ),
-                  trailingImg
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-
-    if (onClick != null) {
-      return InkWell(
-        onTap: onClick,
-        child: item,
-      );
-    } else {
-      return item;
-    }
-  }
 
   Widget get arrow => Image.asset(
         "assets/images/arrow_right.png",

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_netease_cloud/config/config.dart';
 import 'package:flutter_netease_cloud/pages/splash_page/ad_page.dart';
 import 'package:flutter_netease_cloud/routes/router.dart';
+import 'package:flutter_netease_cloud/utils/database_helper/database_helper.dart';
 import 'package:flutter_netease_cloud/utils/local_storage/local_storage.dart';
 
 class RedirectPage extends StatefulWidget {
@@ -22,8 +23,15 @@ class _RedirectPageState extends State<RedirectPage> {
 
   @override
   void initState() {
+    establishDatabase();
+    super.initState();
+  }
+
+  establishDatabase() async {
     var result = LocalStorage.getItem(Config.APPLICATION_FIRST_SETUP);
     if (result != null && result == true) {
+      await DBHelper.db.initDB();
+      print("------------------->end");
       Timer(const Duration(milliseconds: 1500), () {
         Routes.routers.navigateTo(context, Routes.splashPage);
       });
@@ -38,7 +46,6 @@ class _RedirectPageState extends State<RedirectPage> {
         setState(() {});
       }
     }
-    super.initState();
   }
 
   @override

@@ -1,11 +1,7 @@
 import 'package:flutter_netease_cloud/config/address.dart';
-import 'package:flutter_netease_cloud/config/config.dart';
+import 'package:flutter_netease_cloud/utils/database_helper/database_helper.dart';
 import 'package:flutter_netease_cloud/utils/http_manager/http_manager.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart';
-import 'dart:io';
 import 'dart:async';
 
 part 'recommend_song_list.g.dart';
@@ -22,10 +18,25 @@ class RecommendSongListModel {
   // 歌单介绍
   final String name;
   // 歌单播放次数
-  final int playCount;
+  final num playCount;
+  final int type;
+  final String copywriter;
+  final int trackCount;
+  final int canDislike;
+  final int highQuality;
 
-  RecommendSongListModel(
-      {this.id, this.picUrl, this.pageUrl, this.name, this.playCount});
+  RecommendSongListModel({
+    this.id,
+    this.picUrl,
+    this.pageUrl,
+    this.name,
+    this.playCount,
+    this.canDislike,
+    this.copywriter,
+    this.highQuality,
+    this.trackCount,
+    this.type,
+  });
 
   //反序列化
   factory RecommendSongListModel.fromJson(Map<String, dynamic> json) =>
@@ -43,6 +54,7 @@ class RecommendSongListService {
     List<RecommendSongListModel> albums = [];
     if (result.hasError) {
     } else {
+      await RecommendSongListHelper.helper.deleteAll();
       for (int i = 0; i < result.data['result'].length; i++) {
         final item = result.data['result'][i];
         final albumItem = RecommendSongListModel(
@@ -50,9 +62,15 @@ class RecommendSongListService {
             picUrl: item['picUrl'],
             pageUrl: item['pageUrl'],
             playCount: item['playCount'],
-            name: item['name']);
+            name: item['name'],
+            canDislike: item['canDislike'] ? 1 : 0,
+            copywriter: item['copywriter'],
+            highQuality: item['highQuality'] ? 1 : 0,
+            trackCount: item['trackCount'],
+            type: item['type'],
+            );
         albums.add(albumItem);
-        RecommendSongListHelper.db.add(albumItem);
+        await RecommendSongListHelper.helper.add(albumItem);
       }
     }
     return albums;
@@ -62,45 +80,17 @@ class RecommendSongListService {
 // 推荐歌单本地数据库离线助手
 class RecommendSongListHelper {
   RecommendSongListHelper._();
-  static final RecommendSongListHelper db = RecommendSongListHelper._();
-
-  static Database _database;
-
-  String _tableName = "PersonizalAlbum";
-
-  Future<Database> get database async {
-    if (_database != null) {
-      return _database;
-    }
-
-    // if _database is null we instantiate it
-    _database = await _initDB();
-    return _database;
-  }
-
-  _initDB() async {
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, Config.DB_NAME);
-    return await openDatabase(path, version: 1, onOpen: (db) {},
-        onCreate: (Database db, int version) async {
-      await db.execute("CREATE TABLE $_tableName("
-          "id INTEGER PRIMARY KEY,"
-          "picUrl TEXT,"
-          "pageUrl TEXT,"
-          "name TEXT,"
-          "playCount INTEGER"
-          ")");
-    });
-  }
+  static final RecommendSongListHelper helper = RecommendSongListHelper._();
+  String _tableName = DBConfig.recommendSongListTableName;
 
   add(RecommendSongListModel ety) async {
-    final db = await database;
+    final db = await DBHelper.db.database;
     var result = await find(ety.id);
     if (result == null) {
       var raw = await db.rawInsert(
-          "INSERT INTO $_tableName (id, picUrl, pageUrl, name, playCount)"
-          " VALUES (?, ?, ?, ?, ?)",
-          [ety.id, ety.picUrl, ety.pageUrl, ety.name, ety.playCount]);
+          "INSERT INTO $_tableName (id, picUrl, pageUrl, name, playCount, canDislike, copywriter, highQuality, trackCount, type)"
+          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [ety.id, ety.picUrl, ety.pageUrl, ety.name, ety.playCount, ety.canDislike, ety.copywriter, ety.highQuality, ety.trackCount, ety.type]);
       return raw;
     } else {
       return update(ety);
@@ -108,20 +98,20 @@ class RecommendSongListHelper {
   }
 
   update(RecommendSongListModel ety) async {
-    final db = await database;
+    final db = await DBHelper.db.database;
     var res = await db
         .update(_tableName, ety.toJson(), where: "id = ?", whereArgs: [ety.id]);
     return res;
   }
 
   find(int id) async {
-    final db = await database;
+    final db = await DBHelper.db.database;
     var res = await db.query(_tableName, where: "id = ?", whereArgs: [id]);
     return res.isNotEmpty ? RecommendSongListModel.fromJson(res.first) : null;
   }
 
   findAll() async {
-    final db = await database;
+    final db = await DBHelper.db.database;
 
     var res = await db.query(_tableName);
 
@@ -132,12 +122,12 @@ class RecommendSongListHelper {
   }
 
   delete(int id) async {
-    final db = await database;
+    final db = await DBHelper.db.database;
     return db.delete(_tableName, where: "id = ?", whereArgs: [id]);
   }
 
   deleteAll() async {
-    final db = await database;
-    db.rawDelete("Delte * from $_tableName");
+    final db = await DBHelper.db.database;
+    return db.rawDelete("Delete from $_tableName");
   }
 }

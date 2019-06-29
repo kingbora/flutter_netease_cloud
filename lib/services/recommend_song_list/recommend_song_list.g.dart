@@ -13,7 +13,12 @@ RecommendSongListModel _$RecommendSongListModelFromJson(
       picUrl: json['picUrl'] as String,
       pageUrl: json['pageUrl'] as String,
       name: json['name'] as String,
-      playCount: json['playCount'] as int);
+      playCount: json['playCount'] as num,
+      canDislike: json['canDislike'] as int,
+      copywriter: json['copywriter'] as String,
+      highQuality: json['highQuality'] as int,
+      trackCount: json['trackCount'] as int,
+      type: json['type'] as int);
 }
 
 Map<String, dynamic> _$RecommendSongListModelToJson(
@@ -23,5 +28,10 @@ Map<String, dynamic> _$RecommendSongListModelToJson(
       'picUrl': instance.picUrl,
       'pageUrl': instance.pageUrl,
       'name': instance.name,
-      'playCount': instance.playCount
+      'playCount': instance.playCount,
+      'type': instance.type,
+      'copywriter': instance.copywriter,
+      'trackCount': instance.trackCount,
+      'canDislike': instance.canDislike,
+      'highQuality': instance.highQuality
     };

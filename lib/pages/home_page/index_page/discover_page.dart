@@ -2,8 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_netease_cloud/config/constants.dart';
 import 'package:flutter_netease_cloud/services/banner/banner.dart';
+import 'package:flutter_netease_cloud/services/new_album/new_album.dart';
+import 'package:flutter_netease_cloud/services/new_song/new_song.dart';
 import 'package:flutter_netease_cloud/services/recommend_song_list/recommend_song_list.dart';
 import 'package:flutter_netease_cloud/states/discovery_state/discovery_state.dart';
+import 'package:flutter_netease_cloud/widgets/cached_image/cached_image.dart';
 import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
 import 'package:flutter_netease_cloud/widgets/search_bar_delegate/search_bar_delegate.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
@@ -17,23 +20,50 @@ class DiscoverPage extends StatefulWidget {
 }
 
 class _DiscoverPageState extends State<DiscoverPage> {
-  List<BannerModel> bannerList;
+  List<BannerModel> bannerList = const [];
   List<RecommendSongListModel> recommedSongList = const [];
-  Future newSongsList;
-  Future newAlbumsList;
+  List<NewSongModel> newSongsList = const [];
+  List<NewAlbumModel> newAlbumsList = const [];
 
   @override
   void initState() {
-    // bannerList = DiscoverService.getBannerList();
     _getBannerList();
     _getRecommendSongList();
-    // newSongsList = DiscoverService.getNewSongList(const {"type": 0});
-    // newAlbumsList = DiscoverService.getNewAlbumList();
+    _getNewSongs();
+    _getNewAlbums();
     super.initState();
   }
 
+  _getNewAlbums() async {
+    newAlbumsList = await NewAlbumHelper.helper.findAll();
+    if (newAlbumsList.length > 0 && mounted) {
+      setState(() {});
+    }
+    var tempResult = await NewAlbumService.getNewAlbumList();
+    if (tempResult.length > 0) {
+      newAlbumsList = tempResult;
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  _getNewSongs() async {
+    newSongsList = await NewSongHelper.helper.findAll();
+    if (newSongsList.length > 0 && mounted) {
+      setState(() {});
+    }
+    var tempResult = await NewSongService.getNewSong(const {"type": 0});
+    if (tempResult.length > 0) {
+      newSongsList = tempResult;
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
   _getBannerList() async {
-    bannerList = await BannerHelper.db.findAll();
+    bannerList = await BannerHelper.helper.findAll();
     if (bannerList.length > 0 && mounted) {
       setState(() {});
     }
@@ -47,7 +77,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   _getRecommendSongList() async {
-    recommedSongList = await RecommendSongListHelper.db.findAll();
+    recommedSongList = await RecommendSongListHelper.helper.findAll();
     if (recommedSongList.length > 0 && mounted) {
       setState(() {});
     }
@@ -148,20 +178,20 @@ class _DiscoverPageState extends State<DiscoverPage> {
       body: ListView(
         // padding: Constants.safeEdge,
         children: <Widget>[
-          // BannerList(
-          //   bannerList: bannerList,
-          // ),
+          BannerList(
+            bannerList: bannerList,
+          ),
           SubNav(),
           RecommendedSongList(
             recommendSongList: recommedSongList,
           ),
-          // ChangeNotifierProvider<DiscoveryState>(
-          //   builder: (_) => DiscoveryState(),
-          //   child: NewSongAndAlbums(
-          //     newAlbumsList: newAlbumsList,
-          //     newSongsList: newSongsList,
-          //   ),
-          // )
+          ChangeNotifierProvider<DiscoveryState>(
+            builder: (_) => DiscoveryState(),
+            child: NewSongAndAlbums(
+              newAlbumsList: newAlbumsList,
+              newSongsList: newSongsList,
+            ),
+          )
         ],
       ),
     );
@@ -169,99 +199,89 @@ class _DiscoverPageState extends State<DiscoverPage> {
 }
 
 class BannerList extends StatelessWidget {
-  final Future bannerList;
+  final List<BannerModel> bannerList;
   BannerList({this.bannerList});
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    return FutureBuilder(
-      future: bannerList,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          print(snapshot.data);
-          var banners = snapshot.data['banners'];
-          return Container(
-            width: screenWidth,
-            height: screenWidth * 0.38,
-            child: Swiper(
-              autoplay: true,
-              itemBuilder: (BuildContext context, int index) {
-                return Stack(
-                  overflow: Overflow.clip,
-                  children: <Widget>[
-                    Container(
-                      width: screenWidth,
-                      height: screenWidth * 0.38,
-                      padding: Constants.safeEdge,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: CachedNetworkImage(
-                          imageUrl: banners[index]['pic'],
-                          placeholder: (context, url) =>
-                              new CupertinoActivityIndicator(),
-                          errorWidget: (context, url, error) =>
-                              new Icon(Icons.error),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: Constants.safeEdge.right,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 1, horizontal: 6),
-                        decoration: BoxDecoration(
-                          color: Constants.themeColor,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            bottomRight: Radius.circular(8.0),
-                          ),
-                        ),
-                        child: Text(
-                          banners[index]['typeTitle'] ?? "",
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                );
-              },
-              itemCount: banners.length,
-              pagination: new SwiperPagination(
-                builder: const DotSwiperPaginationBuilder(
-                  color: Colors.white30,
-                  activeColor: Constants.themeColor,
-                  size: 6,
-                  activeSize: 6,
-                  space: 3.0,
+
+    if (bannerList.length <= 0) {
+      return Container(
+        width: double.infinity,
+        height: 100,
+        child: CupertinoActivityIndicator(),
+      );
+    }
+
+    return Container(
+      width: screenWidth,
+      height: screenWidth * 0.38,
+      child: Swiper(
+        autoplay: true,
+        itemBuilder: (BuildContext context, int index) {
+          return Stack(
+            overflow: Overflow.clip,
+            children: <Widget>[
+              Container(
+                width: screenWidth,
+                height: screenWidth * 0.38,
+                padding: Constants.safeEdge,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: CachedImage(
+                    imageUrl: bannerList[index].picUrl,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-            ),
+              Positioned(
+                bottom: 0,
+                right: Constants.safeEdge.right,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 1, horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: _getTitleColor(bannerList[index].titleColor),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      bottomRight: Radius.circular(8.0),
+                    ),
+                  ),
+                  child: Text(
+                    bannerList[index].subtitle ?? "",
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              )
+            ],
           );
-        } else if (snapshot.hasError) {
-          return Container(
-            width: double.infinity,
-            height: 200,
-            child: IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () {
-                
-              },
-            ),
-          );
-        }
-
-        return Container(
-          width: double.infinity,
-          height: 200,
-          child: CupertinoActivityIndicator(),
-        );
-      },
+        },
+        itemCount: bannerList.length,
+        pagination: new SwiperPagination(
+          builder: const DotSwiperPaginationBuilder(
+            color: Colors.white30,
+            activeColor: Constants.themeColor,
+            size: 6,
+            activeSize: 6,
+            space: 3.0,
+          ),
+        ),
+      ),
     );
+  }
+
+  _getTitleColor(color) {
+    switch (color) {
+      case "red":
+        return Constants.themeColor;
+      case "blue":
+        return Color(0xFF5EA3EA);
+      default:
+        return Constants.themeColor;
+    }
   }
 }
 
@@ -458,12 +478,8 @@ class RecommendedSongList extends StatelessWidget {
                   height: itemWidth,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(radius),
-                    child: CachedNetworkImage(
+                    child: CachedImage(
                       imageUrl: recommendSongList[index].picUrl,
-                      placeholder: (context, url) =>
-                          new CupertinoActivityIndicator(),
-                      errorWidget: (context, url, error) =>
-                          new Icon(Icons.error),
                       fit: BoxFit.contain,
                       width: itemWidth,
                       height: itemWidth,
@@ -539,8 +555,8 @@ class RecommendedSongList extends StatelessWidget {
 }
 
 class NewSongAndAlbums extends StatefulWidget {
-  final Future newSongsList;
-  final Future newAlbumsList;
+  final List<NewSongModel> newSongsList;
+  final List<NewAlbumModel> newAlbumsList;
   NewSongAndAlbums({this.newSongsList, this.newAlbumsList});
   @override
   _NewSongAndAlbumsState createState() => _NewSongAndAlbumsState();
@@ -550,12 +566,6 @@ class _NewSongAndAlbumsState extends State<NewSongAndAlbums> {
   @override
   Widget build(BuildContext context) {
     final discoveryState = Provider.of<DiscoveryState>(context);
-    final double width = MediaQuery.of(context).size.width -
-        Constants.safeEdge.left -
-        Constants.safeEdge.right;
-    final double gap = width * 0.1 / 2;
-    final double itemWidth = width * 0.3;
-
     final TextStyle tabStyle = TextStyle(
       color: Color(0xFF999999),
       fontSize: 13,
@@ -641,199 +651,11 @@ class _NewSongAndAlbumsState extends State<NewSongAndAlbums> {
             children: <Widget>[
               Offstage(
                 offstage: discoveryState.currentIndex != 0,
-                child: FutureBuilder(
-                  future: widget.newAlbumsList,
-                  builder: (BuildContext context, snapshot) {
-                    if (snapshot.hasData) {
-                      final List list = snapshot.data['albums'];
-                      // 截取前三个
-                      final int len = list.length > 3 ? 3 : list.length;
-                      // 圆角值
-                      final double radius = 5;
-                      return Wrap(
-                        spacing: gap,
-                        runSpacing: 10,
-                        children: List.generate(len, (index) {
-                          return Column(
-                            children: <Widget>[
-                              Container(
-                                width: itemWidth,
-                                height: itemWidth,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(radius),
-                                  child: CachedNetworkImage(
-                                    imageUrl: list[index]['picUrl'],
-                                    placeholder: (context, url) =>
-                                        new CupertinoActivityIndicator(),
-                                    errorWidget: (context, url, error) =>
-                                        new Icon(Icons.error),
-                                    fit: BoxFit.cover,
-                                    width: itemWidth,
-                                    height: itemWidth,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding:
-                                    const EdgeInsets.only(top: 5, bottom: 5),
-                                width: itemWidth,
-                                height: 44,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(
-                                      list[index]['name'],
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Constants.normalFontColor,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                    Text(
-                                      list[index]['artist']['name'] ?? "",
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Constants.normalFontColor,
-                                        fontSize: 11,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      );
-                    } else if (snapshot.hasError) {
-                      return Container(
-                        width: double.infinity,
-                        height: 200,
-                        child: IconButton(
-                          icon: Icon(Icons.refresh),
-                          onPressed: () {},
-                        ),
-                      );
-                    }
-                    return Container(
-                      width: double.infinity,
-                      height: 200,
-                      child: CupertinoActivityIndicator(),
-                    );
-                  },
-                ),
+                child: _buildWrapLayout("song", context),
               ),
               Offstage(
                 offstage: discoveryState.currentIndex != 1,
-                child: FutureBuilder(
-                  future: widget.newSongsList,
-                  builder: (BuildContext context, snapshot) {
-                    if (snapshot.hasData) {
-                      final List list = snapshot.data['data'];
-                      // 截取前三个
-                      final int len = list.length > 3 ? 3 : list.length;
-                      // 圆角值
-                      final double radius = 5;
-                      return Wrap(
-                        spacing: gap,
-                        runSpacing: 10,
-                        children: List.generate(len, (index) {
-                          return Column(
-                            children: <Widget>[
-                              Stack(
-                                children: <Widget>[
-                                  Container(
-                                    width: itemWidth,
-                                    height: itemWidth,
-                                    child: ClipRRect(
-                                      borderRadius:
-                                          BorderRadius.circular(radius),
-                                      child: CachedNetworkImage(
-                                        imageUrl: list[index]['artists'][0]
-                                            ['picUrl'],
-                                        placeholder: (context, url) =>
-                                            new CupertinoActivityIndicator(),
-                                        errorWidget: (context, url, error) =>
-                                            new Icon(Icons.error),
-                                        fit: BoxFit.cover,
-                                        width: itemWidth,
-                                        height: itemWidth,
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: gap,
-                                    right: gap,
-                                    child: Container(
-                                      width: 30,
-                                      height: 30,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.black.withOpacity(0.7),
-                                      ),
-                                      child: Image.asset(
-                                        "assets/images/play.png",
-                                        width: 20,
-                                        color: Constants.themeColor,
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              ),
-                              Container(
-                                padding:
-                                    const EdgeInsets.only(top: 5, bottom: 5),
-                                width: itemWidth,
-                                height: 44,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(
-                                      list[index]['name'],
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Constants.normalFontColor,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                    Text(
-                                      _getArtistsName(list[index]['artists']),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Color(0xFFcccccc),
-                                        fontSize: 9,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      );
-                    } else if (snapshot.hasError) {
-                      return Container(
-                        width: double.infinity,
-                        height: 200,
-                        child: IconButton(
-                          icon: Icon(Icons.refresh),
-                          onPressed: () {},
-                        ),
-                      );
-                    }
-
-                    return Container(
-                      width: double.infinity,
-                      height: 200,
-                      child: CupertinoActivityIndicator(),
-                    );
-                  },
-                ),
+                child: _buildWrapLayout("album", context),
               )
             ],
           )
@@ -842,12 +664,106 @@ class _NewSongAndAlbumsState extends State<NewSongAndAlbums> {
     );
   }
 
-  _getArtistsName(List artists) {
-    List artistNames = [];
-    for (int i = 0; i < artists.length; i++) {
-      artistNames.add(artists[i]['name']);
+  _buildWrapLayout(String type, BuildContext context) {
+    List list = type == "song" ? widget.newSongsList : widget.newAlbumsList;
+    if (list.length <= 0) {
+      return Container(
+        width: double.infinity,
+        height: 100,
+        child: CupertinoActivityIndicator(),
+      );
+    }
+    final double width = MediaQuery.of(context).size.width -
+        Constants.safeEdge.left -
+        Constants.safeEdge.right;
+    final double gap = width * 0.1 / 2;
+    final double itemWidth = width * 0.3;
+    // 截取前三个
+    final int len = list.length > 3 ? 3 : list.length;
+    // 圆角值
+    final double radius = 5;
+    return Wrap(
+      spacing: gap,
+      runSpacing: 10,
+      children: List.generate(len, (index) {
+        return Column(
+          children: <Widget>[
+            Stack(
+              children:
+                  _buildPositioned(itemWidth, gap, radius, list[index], type),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 5, bottom: 5),
+              width: itemWidth,
+              height: 44,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    list[index].name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Constants.normalFontColor,
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(
+                    list[index].artistsName ?? "",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Constants.normalFontColor,
+                      fontSize: 11,
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  List<Widget> _buildPositioned(itemWidth, gap, radius, item, type) {
+    List<Widget> _widgets = [
+      Container(
+        width: itemWidth,
+        height: itemWidth,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: CachedImage(
+            imageUrl: item.picUrl,
+            fit: BoxFit.cover,
+            width: itemWidth,
+            height: itemWidth,
+          ),
+        ),
+      )
+    ];
+    if (type == "song") {
+      _widgets.add(Positioned(
+        bottom: gap,
+        right: gap,
+        child: Container(
+          width: 25,
+          height: 25,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.black.withOpacity(0.7),
+          ),
+          child: Image.asset(
+            "assets/images/play.png",
+            width: 12,
+            height: 12,
+            color: Constants.themeColor,
+          ),
+        ),
+      ));
     }
 
-    return artistNames.length > 0 ? artistNames.join("&") : "";
+    return _widgets;
   }
 }

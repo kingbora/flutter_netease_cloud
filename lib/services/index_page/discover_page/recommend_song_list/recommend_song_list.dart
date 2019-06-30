@@ -1,8 +1,6 @@
-import 'package:flutter_netease_cloud/config/address.dart';
 import 'package:flutter_netease_cloud/utils/database_helper/database_helper.dart';
-import 'package:flutter_netease_cloud/utils/http_manager/http_manager.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'dart:async';
+import 'package:sqflite/sqlite_api.dart';
 
 part 'recommend_song_list.g.dart';
 
@@ -45,38 +43,6 @@ class RecommendSongListModel {
   Map<String, dynamic> toJson() => _$RecommendSongListModelToJson(this);
 }
 
-// 推荐歌单http服务
-class RecommendSongListService {
-  static Future<List<RecommendSongListModel>> getRecommendSongList() async {
-    var result = await httpManager.fetch(HttpRequests(
-      url: Address.getRecommendSongList(),
-    ));
-    List<RecommendSongListModel> albums = [];
-    if (result.hasError) {
-    } else {
-      await RecommendSongListHelper.helper.deleteAll();
-      for (int i = 0; i < result.data['result'].length; i++) {
-        final item = result.data['result'][i];
-        final albumItem = RecommendSongListModel(
-            id: item['id'],
-            picUrl: item['picUrl'],
-            pageUrl: item['pageUrl'],
-            playCount: item['playCount'],
-            name: item['name'],
-            canDislike: item['canDislike'] ? 1 : 0,
-            copywriter: item['copywriter'],
-            highQuality: item['highQuality'] ? 1 : 0,
-            trackCount: item['trackCount'],
-            type: item['type'],
-            );
-        albums.add(albumItem);
-        await RecommendSongListHelper.helper.add(albumItem);
-      }
-    }
-    return albums;
-  }
-}
-
 // 推荐歌单本地数据库离线助手
 class RecommendSongListHelper {
   RecommendSongListHelper._();
@@ -90,10 +56,55 @@ class RecommendSongListHelper {
       var raw = await db.rawInsert(
           "INSERT INTO $_tableName (id, picUrl, pageUrl, name, playCount, canDislike, copywriter, highQuality, trackCount, type)"
           " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          [ety.id, ety.picUrl, ety.pageUrl, ety.name, ety.playCount, ety.canDislike, ety.copywriter, ety.highQuality, ety.trackCount, ety.type]);
+          [
+            ety.id,
+            ety.picUrl,
+            ety.pageUrl,
+            ety.name,
+            ety.playCount,
+            ety.canDislike,
+            ety.copywriter,
+            ety.highQuality,
+            ety.trackCount,
+            ety.type
+          ]);
       return raw;
     } else {
       return update(ety);
+    }
+  }
+
+  addAll(List<RecommendSongListModel> etys) async {
+    if (etys.length > 0) {
+      final db = await DBHelper.db.database;
+      Batch batch = db.batch();
+      batch.delete(_tableName);
+      etys.map((ety) async {
+        var result = await find(ety.id);
+        if (result == null) {
+          batch.rawInsert(
+              "INSERT INTO $_tableName (id, picUrl, pageUrl, name, playCount, canDislike, copywriter, highQuality, trackCount, type)"
+              " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              [
+                ety.id,
+                ety.picUrl,
+                ety.pageUrl,
+                ety.name,
+                ety.playCount,
+                ety.canDislike,
+                ety.copywriter,
+                ety.highQuality,
+                ety.trackCount,
+                ety.type
+              ]);
+        } else {
+          batch.update(_tableName, ety.toJson(),
+              where: "id = ?", whereArgs: [ety.id]);
+        }
+      });
+
+      var result = await batch.commit();
+      return result;
     }
   }
 

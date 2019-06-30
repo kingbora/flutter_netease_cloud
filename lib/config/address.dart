@@ -13,7 +13,7 @@ class Address {
   }
 
   static getRecommendSongList() {
-    return "$baseUrl/personalized?type=500";
+    return "$baseUrl/personalized";
   }
 
   static getNewSongList() {

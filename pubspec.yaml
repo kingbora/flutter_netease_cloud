@@ -35,6 +35,7 @@ dependencies:
   json_annotation: ^2.4.0
   fluttertoast: ^3.1.0
   sticky_headers: ^0.1.8
+  rxdart: ^0.22.0
 
 dev_dependencies:
   # flutter_test:

@@ -1,8 +1,6 @@
-import 'package:flutter_netease_cloud/config/address.dart';
 import 'package:flutter_netease_cloud/utils/database_helper/database_helper.dart';
-import 'package:flutter_netease_cloud/utils/http_manager/http_manager.dart';
 import 'package:json_annotation/json_annotation.dart';
-
+import 'package:sqflite/sqlite_api.dart';
 part 'new_song.g.dart';
 
 // 数据模型
@@ -20,35 +18,6 @@ class NewSongModel {
       _$NewSongModelFromJson(json);
   // 反序列化
   Map<String, dynamic> toJson() => _$NewSongModelToJson(this);
-}
-
-// http服务
-class NewSongService {
-  static getNewSong(Map<String, dynamic> params) async {
-    var result = await httpManager
-        .fetch(HttpRequests(url: Address.getNewSongList(), query: params));
-    List<NewSongModel> newSongs = [];
-    if (result.hasError) {
-    } else {
-      await NewSongHelper.helper.deleteAll();
-      for (int i = 0; i < result.data['data'].length; i++) {
-        final item = result.data['data'][i];
-        final songItem = NewSongModel(
-            id: item['id'],
-            picUrl: item['artists'][0]['img1v1Url'],
-            name: item['name'],
-            artistsName: item['artists']
-                .map((artist) {
-                  return artist['name'];
-                })
-                .toList()
-                .join("/"));
-        newSongs.add(songItem);
-        await NewSongHelper.helper.add(songItem);
-      }
-    }
-    return newSongs;
-  }
 }
 
 // 数据本地离线助手
@@ -69,6 +38,29 @@ class NewSongHelper {
       return raw;
     } else {
       return update(ety);
+    }
+  }
+
+  addAll(List<NewSongModel> etys) async {
+    if (etys.length > 0) {
+      final db = await DBHelper.db.database;
+      Batch batch = db.batch();
+      batch.delete(_tableName);
+      etys.map((ety) async {
+        var result = await find(ety.id);
+        if (result == null) {
+          batch.rawInsert(
+              "INSERT INTO $_tableName (id, picUrl, name, artistsName)"
+              " VALUES (?, ?, ?, ?)",
+              [ety.id, ety.picUrl, ety.name, ety.artistsName]);
+        } else {
+          batch.update(_tableName, ety.toJson(),
+              where: "id = ?", whereArgs: [ety.id]);
+        }
+      });
+
+      var result = batch.commit();
+      return result;
     }
   }
 

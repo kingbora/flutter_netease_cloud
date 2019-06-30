@@ -21,13 +21,13 @@ class DBHelper {
 
   Future<Database> get database async {
     if (_database == null) {
-      await initDB();
+      await initDB(false);
     }
     return _database;
   }
 
-  initDB() async {
-    String path = await initDeleteDB();
+  initDB(bool init) async {
+    String path = await initDeleteDB(init);
     _database = await openDatabase(path, version: 1, onOpen: (db) {},
         onCreate: (Database db, int version) async {
       print("start:-------------------------------------->1");
@@ -82,16 +82,18 @@ class DBHelper {
     });
   }
 
-  initDeleteDB() async {
+  initDeleteDB(init) async {
     final String databasePath = await getDatabasesPath();
     final String path = join(databasePath, DBConfig.DBName);
-    if (await Directory(dirname(path)).exists()) {
-      await deleteDatabase(path);
-    } else {
-      try {
-        await Directory(dirname(path)).create(recursive: true);
-      } catch (e) {
-        print(e);
+    if (init) {
+      if (await Directory(dirname(path)).exists()) {
+        await deleteDatabase(path);
+      } else {
+        try {
+          await Directory(dirname(path)).create(recursive: true);
+        } catch (e) {
+          print(e);
+        }
       }
     }
 

@@ -28,9 +28,9 @@ class _RedirectPageState extends State<RedirectPage> {
   }
 
   establishDatabase() async {
-    var result = LocalStorage.getItem(Config.APPLICATION_FIRST_SETUP);
+    var result = await LocalStorage.getItem(Config.APPLICATION_FIRST_SETUP);
     if (result != null && result == true) {
-      await DBHelper.db.initDB();
+      await DBHelper.db.initDB(true);
       print("------------------->end");
       Timer(const Duration(milliseconds: 1500), () {
         Routes.routers.navigateTo(context, Routes.splashPage);

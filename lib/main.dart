@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter_netease_cloud/services/global_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final GlobalBloc _globalBloc = GlobalBloc();
   StreamSubscription stream;
 
   @override
@@ -43,6 +45,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    _globalBloc.dispose();
     stream?.cancel();
     super.dispose();
   }

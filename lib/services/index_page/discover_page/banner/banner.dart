@@ -1,7 +1,6 @@
-import 'package:flutter_netease_cloud/config/address.dart';
 import 'package:flutter_netease_cloud/utils/database_helper/database_helper.dart';
-import 'package:flutter_netease_cloud/utils/http_manager/http_manager.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:sqflite/sqlite_api.dart';
 
 part 'banner.g.dart';
 
@@ -22,51 +21,22 @@ class BannerModel {
   final int targetType;
   final int targetId;
 
-  BannerModel(
-      {this.id,
-      this.picUrl,
-      this.pageUrl,
-      this.subtitle,
-      this.titleColor,
-      this.showAdTag,
-      this.targetId,
-      this.targetType,
-      });
+  BannerModel({
+    this.id,
+    this.picUrl,
+    this.pageUrl,
+    this.subtitle,
+    this.titleColor,
+    this.showAdTag,
+    this.targetId,
+    this.targetType,
+  });
 
   //反序列化
   factory BannerModel.fromJson(Map<String, dynamic> json) =>
       _$BannerModelFromJson(json);
   //序列化
   Map<String, dynamic> toJson() => _$BannerModelToJson(this);
-}
-
-class BannerService {
-  static getBannerList() async {
-    var result = await httpManager
-        .fetch(HttpRequests(url: Address.getBanners(), query: {"type": "1"}));
-
-    List<BannerModel> banners = [];
-    if (result.hasError) {
-    } else {
-      BannerHelper.helper.deleteAll();
-      for (int i = 0; i < result.data['banners'].length; i++) {
-        final item = result.data['banners'][i];
-        final bannerItem = BannerModel(
-          id: int.parse(item['bannerId']),
-          picUrl: item['pic'],
-          pageUrl: item['url'],
-          subtitle: item['typeTitle'],
-          titleColor: item['titleColor'],
-          showAdTag: item['showAdTag'] ? 1 : 0,
-          targetId: item['targetId'],
-          targetType: item['targetType'],
-        );
-        banners.add(bannerItem);
-        BannerHelper.helper.add(bannerItem);
-      }
-    }
-    return banners;
-  }
 }
 
 class BannerHelper {
@@ -82,10 +52,51 @@ class BannerHelper {
       var raw = await db.rawInsert(
           "INSERT INTO $_tableName (id, picUrl, pageUrl, subtitle, titleColor, showAdTag, targetType, targetId)"
           " VALUES (?, ?, ?, ?, ?, ?, ?)",
-          [ety.id, ety.picUrl, ety.pageUrl, ety.subtitle, ety.titleColor, ety.showAdTag, ety.targetType, ety.targetId]);
+          [
+            ety.id,
+            ety.picUrl,
+            ety.pageUrl,
+            ety.subtitle,
+            ety.titleColor,
+            ety.showAdTag,
+            ety.targetType,
+            ety.targetId
+          ]);
       return raw;
     } else {
       return update(ety);
+    }
+  }
+
+  addAll(List<BannerModel> etys) async {
+    if (etys.length > 0) {
+      final db = await DBHelper.db.database;
+      Batch batch = db.batch();
+      batch.delete(_tableName);
+      etys.map((ety) async {
+        var result = await find(ety.id);
+        if (result == null) {
+          batch.rawInsert(
+              "INSERT INTO $_tableName (id, picUrl, pageUrl, subtitle, titleColor, showAdTag, targetType, targetId)"
+              " VALUES (?, ?, ?, ?, ?, ?, ?)",
+              [
+                ety.id,
+                ety.picUrl,
+                ety.pageUrl,
+                ety.subtitle,
+                ety.titleColor,
+                ety.showAdTag,
+                ety.targetType,
+                ety.targetId
+              ]);
+        } else {
+          batch.update(_tableName, ety.toJson(),
+              where: "id = ?", whereArgs: [ety.id]);
+        }
+      });
+
+      var result = await batch.commit();
+      return result;
     }
   }
 

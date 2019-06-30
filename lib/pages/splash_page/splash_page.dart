@@ -13,9 +13,9 @@ class SplashPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: FlatButton(
+        child: InkWell(
           child: Text("跳过"),
-          onPressed: () {
+          onTap: () {
             Routes.routers.navigateTo(context, Routes.homePage);
           },
         ),

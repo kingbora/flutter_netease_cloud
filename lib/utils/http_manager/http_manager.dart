@@ -77,11 +77,11 @@ class HttpManager {
         );
       }
     } on DioError catch (e) {
-      return handlerError(e);
+      return StatusCode.handlerError(e);
     }
 
     if (response.data is DioError) {
-      return handlerError(response.data);
+      return StatusCode.handlerError(response.data);
     }
 
     return ResponseFormat(
@@ -102,7 +102,7 @@ class HttpManager {
     try {
       response = await _dio.download(urlPath, savePath, onReceiveProgress: onReceiveProgress, options: option,);
     } on DioError catch (e) {
-      handlerError(e);
+      StatusCode.handlerError(e);
     }
 
     return response;
@@ -131,26 +131,6 @@ class HttpManager {
     if (!token.isCancelled) {
       token.cancel("cancelled");
     }
-  }
-
-  ResponseFormat handlerError(DioError e) {
-    Response errorResponse;
-    if (e.response != null) {
-      errorResponse = e.response;
-    } else {
-      errorResponse = new Response(statusCode: StatusCode.UNKNOWN_ERROR);
-    }
-
-    if (e.type == DioErrorType.CONNECT_TIMEOUT || e.type == DioErrorType.RECEIVE_TIMEOUT) {
-      errorResponse.statusCode = StatusCode.NETWORK_TIMEOUT;
-    }
-
-    return ResponseFormat(
-      data: StatusCode.emit(errorResponse),
-      hasError: true,
-      statusCode: errorResponse.statusCode,
-      headers: errorResponse.headers
-    );
   }
 }
 

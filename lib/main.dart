@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter_netease_cloud/services/global_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:fluro/fluro.dart';
@@ -34,19 +35,37 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final GlobalBloc _globalBloc = GlobalBloc();
   StreamSubscription stream;
+  StreamSubscription networkSubscription;
 
   @override
   void initState() {
     stream = Application.errorHandlerEvent.on<HttpErrorEvent>().listen((event) {
       Fluttertoast.showToast(msg: event.message);
     });
+    networkSubscription = Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
     super.initState();
+  }
+
+  // 监听当前网络状态
+  _updateConnectionStatus(ConnectivityResult result) async {
+    switch (result) {
+      case ConnectivityResult.wifi:
+        break;
+      case ConnectivityResult.mobile:
+        break;
+      case ConnectivityResult.none:
+        Fluttertoast.showToast(msg: "暂无网络连接");
+        break;
+      default:
+        break;
+    }
   }
 
   @override
   void dispose() {
     _globalBloc.dispose();
     stream?.cancel();
+    networkSubscription?.cancel();
     super.dispose();
   }
 

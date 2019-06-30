@@ -113,7 +113,7 @@ class BannerHelper {
     return res.isNotEmpty ? BannerModel.fromJson(res.first) : null;
   }
 
-  findAll() async {
+  Future<List<BannerModel>> findAll() async {
     final db = await DBHelper.db.database;
 
     var res = await db.query(_tableName);

@@ -17,6 +17,9 @@ class DiscoverPageBloc {
   }
 
   initLocalData() async {
+    // List<BannerModel> bannerSeedValue = await BannerHelper.helper.findAll();
+    // print("...................");
+    // print(bannerSeedValue);
     _banner = new BehaviorSubject<List<BannerModel>>();
     _newSong = new BehaviorSubject<List<NewSongModel>>();
     _newAlbum = new BehaviorSubject<List<NewAlbumModel>>();
@@ -28,8 +31,10 @@ class DiscoverPageBloc {
         .fetch(HttpRequests(url: Address.getBanners(), query: {"type": "1"}));
 
     if (result.hasError) {
+      print("error---------->");
       _banner.sink.addError(result);
     } else {
+      print("success----------->");
       List<BannerModel> banners = [];
       for (int i = 0; i < result.data['banners'].length; i++) {
         final item = result.data['banners'][i];
@@ -45,7 +50,9 @@ class DiscoverPageBloc {
         );
         banners.add(bannerItem);
       }
-      BannerHelper.helper.addAll(banners);
+      var res = await BannerHelper.helper.addAll(banners);
+      print("------------->res:");
+      print(res);
       _banner.sink.add(banners);
     }
   }

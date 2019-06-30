@@ -19,7 +19,6 @@ class DiscoverPage extends StatefulWidget {
 }
 
 class _DiscoverPageState extends State<DiscoverPage> {
-
   @override
   void initState() {
     IndexPageBloc.discoverPageBloc.getBannerList();
@@ -114,69 +113,80 @@ class BannerList extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return StreamBuilder(
-      stream: IndexPageBloc.discoverPageBloc.banner,
+      // 一定要使用stream，不然接收不到add或addError的数据，只会得到最后的banner数据
+      stream: IndexPageBloc.discoverPageBloc.banner.stream,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           List<BannerModel> bannerList = snapshot.data;
-          return Container(
-            width: screenWidth,
-            height: screenWidth * 0.38,
-            child: Swiper(
-              autoplayDelay: 7000,
-              autoplay: true,
-              itemBuilder: (BuildContext context, int index) {
-                return Stack(
-                  overflow: Overflow.clip,
-                  children: <Widget>[
-                    Container(
-                      width: screenWidth,
-                      height: screenWidth * 0.38,
-                      padding: Constants.safeEdge,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: CachedImage(
-                          imageUrl: bannerList[index].picUrl,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: Constants.safeEdge.right,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 1, horizontal: 6),
-                        decoration: BoxDecoration(
-                          color: _getTitleColor(bannerList[index].titleColor),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            bottomRight: Radius.circular(8.0),
-                          ),
-                        ),
-                        child: Text(
-                          bannerList[index].subtitle ?? "",
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
+          if (bannerList.length > 0) {
+            return Container(
+              width: screenWidth,
+              height: screenWidth * 0.38,
+              child: Swiper(
+                autoplayDelay: 7000,
+                autoplay: true,
+                itemBuilder: (BuildContext context, int index) {
+                  return Stack(
+                    overflow: Overflow.clip,
+                    children: <Widget>[
+                      Container(
+                        width: screenWidth,
+                        height: screenWidth * 0.38,
+                        padding: Constants.safeEdge,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: CachedImage(
+                            imageUrl: bannerList[index].picUrl,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                    )
-                  ],
-                );
-              },
-              itemCount: bannerList.length,
-              pagination: new SwiperPagination(
-                builder: const DotSwiperPaginationBuilder(
-                  color: Colors.white30,
-                  activeColor: Constants.themeColor,
-                  size: 6,
-                  activeSize: 6,
-                  space: 3.0,
+                      Positioned(
+                        bottom: 0,
+                        right: Constants.safeEdge.right,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 1, horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: _getTitleColor(bannerList[index].titleColor),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(8.0),
+                            ),
+                          ),
+                          child: Text(
+                            bannerList[index].subtitle ?? "",
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
+                  );
+                },
+                itemCount: bannerList.length,
+                pagination: new SwiperPagination(
+                  builder: const DotSwiperPaginationBuilder(
+                    color: Colors.white30,
+                    activeColor: Constants.themeColor,
+                    size: 6,
+                    activeSize: 6,
+                    space: 3.0,
+                  ),
                 ),
               ),
-            ),
-          );
+            );
+          } else {
+            return Container(
+              height: 150,
+              width: double.infinity,
+              child: Center(
+                child: Text("No Data!"),
+              ),
+            );
+          }
         } else if (snapshot.hasError) {
           return Container(
             width: double.infinity,
@@ -184,6 +194,7 @@ class BannerList extends StatelessWidget {
             child: Icon(Icons.error),
           );
         } else {
+          print("...........>other");
           return Container(
             width: double.infinity,
             height: 200,
@@ -360,7 +371,7 @@ class RecommendedSongList extends StatelessWidget {
             ),
           ),
           StreamBuilder(
-            stream: IndexPageBloc.discoverPageBloc.recommendSongList,
+            stream: IndexPageBloc.discoverPageBloc.recommendSongList.stream,
             builder: (context, snapshot) =>
                 _buildAlbumsLayout(context, snapshot),
           ),
@@ -372,6 +383,15 @@ class RecommendedSongList extends StatelessWidget {
   _buildAlbumsLayout(context, AsyncSnapshot snapshot) {
     if (snapshot.hasData) {
       List<RecommendSongListModel> recommendSongList = snapshot.data;
+      if (recommendSongList.length <= 0) {
+        return Container(
+          height: 150,
+          width: double.infinity,
+          child: Center(
+            child: Text("No Data!"),
+          ),
+        );
+      }
       final double width = MediaQuery.of(context).size.width -
           Constants.safeEdge.left -
           Constants.safeEdge.right;
@@ -382,14 +402,6 @@ class RecommendedSongList extends StatelessWidget {
           recommendSongList.length > 6 ? 6 : recommendSongList.length;
       // 圆角值
       final double radius = 5;
-
-      if (len <= 0) {
-        return Container(
-          width: double.infinity,
-          height: 200,
-          child: CupertinoActivityIndicator(),
-        );
-      }
 
       return Wrap(
         spacing: gap,
@@ -478,6 +490,11 @@ class RecommendedSongList extends StatelessWidget {
         }).toList(),
       );
     } else if (snapshot.hasError) {
+      return Container(
+        width: double.infinity,
+        height: 200,
+        child: Icon(Icons.error),
+      );
     } else {
       return Container(
         width: double.infinity,
@@ -578,7 +595,7 @@ class NewSongAndAlbums extends StatelessWidget {
               Offstage(
                 offstage: discoveryState.currentIndex != 0,
                 child: StreamBuilder(
-                  stream: IndexPageBloc.discoverPageBloc.newAlbum,
+                  stream: IndexPageBloc.discoverPageBloc.newAlbum.stream,
                   builder: (context, snapshot) =>
                       _buildWrapLayout(snapshot, context),
                 ),
@@ -586,7 +603,7 @@ class NewSongAndAlbums extends StatelessWidget {
               Offstage(
                 offstage: discoveryState.currentIndex != 1,
                 child: StreamBuilder(
-                  stream: IndexPageBloc.discoverPageBloc.newSong,
+                  stream: IndexPageBloc.discoverPageBloc.newSong.stream,
                   builder: (context, snapshot) =>
                       _buildWrapLayout(snapshot, context),
                 ),
@@ -601,6 +618,15 @@ class NewSongAndAlbums extends StatelessWidget {
   _buildWrapLayout(AsyncSnapshot snapshot, BuildContext context) {
     if (snapshot.hasData) {
       List list = snapshot.data;
+      if (list.length <= 0) {
+        return Container(
+          height: 150,
+          width: double.infinity,
+          child: Center(
+            child: Text("No Data!"),
+          ),
+        );
+      }
       final double width = MediaQuery.of(context).size.width -
           Constants.safeEdge.left -
           Constants.safeEdge.right;
@@ -653,6 +679,11 @@ class NewSongAndAlbums extends StatelessWidget {
         }).toList(),
       );
     } else if (snapshot.hasError) {
+      return Container(
+        width: double.infinity,
+        height: 200,
+        child: Icon(Icons.error),
+      );
     } else {
       return Container(
         width: double.infinity,

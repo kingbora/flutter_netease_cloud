@@ -7,6 +7,7 @@ main(List<String> args) {
     "artist": "mkm"
   }];
   var temp = _list.map((item) {
+    print("111");
     return item['name'];
   });
   print(temp);

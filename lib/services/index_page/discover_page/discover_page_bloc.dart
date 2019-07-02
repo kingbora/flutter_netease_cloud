@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_netease_cloud/config/address.dart';
 import 'package:flutter_netease_cloud/services/index_page/discover_page/banner/banner.dart';
 import 'package:flutter_netease_cloud/services/index_page/discover_page/new_album/new_album.dart';
@@ -11,19 +12,24 @@ class DiscoverPageBloc {
   BehaviorSubject<List<NewSongModel>> _newSong;
   BehaviorSubject<List<NewAlbumModel>> _newAlbum;
   BehaviorSubject<List<RecommendSongListModel>> _recommendSongList;
+  List<BannerModel> _defaultBanner = const [];
+  List<NewSongModel> _defaultNewSong = const [];
+  List<NewAlbumModel> _defaultNewAlbum = const [];
+  List<RecommendSongListModel> _defaultRecommendSongList = const [];
 
   DiscoverPageBloc() {
-    initLocalData();
-  }
-
-  initLocalData() async {
-    // List<BannerModel> bannerSeedValue = await BannerHelper.helper.findAll();
-    // print("...................");
-    // print(bannerSeedValue);
     _banner = new BehaviorSubject<List<BannerModel>>();
     _newSong = new BehaviorSubject<List<NewSongModel>>();
     _newAlbum = new BehaviorSubject<List<NewAlbumModel>>();
     _recommendSongList = new BehaviorSubject<List<RecommendSongListModel>>();
+  }
+
+  initLocalData() async {
+    print("init");
+    _defaultBanner = await BannerHelper.helper.findAll();
+    _defaultNewSong = await NewSongHelper.helper.findAll();
+    _defaultNewAlbum = await NewAlbumHelper.helper.findAll();
+    _defaultRecommendSongList = await RecommendSongListHelper.helper.findAll();
   }
 
   void getBannerList() async {
@@ -50,9 +56,7 @@ class DiscoverPageBloc {
         );
         banners.add(bannerItem);
       }
-      var res = await BannerHelper.helper.addAll(banners);
-      print("------------->res:");
-      print(res);
+      await BannerHelper.helper.addAll(banners);
       _banner.sink.add(banners);
     }
   }
@@ -157,6 +161,8 @@ class DiscoverPageBloc {
     }
   }
 
+  static DiscoverPageBloc of(BuildContext context) => (context.ancestorInheritedElementForWidgetOfExactType(DiscoverPageBloc) as DiscoverPageBloc);
+
   BehaviorSubject<List<BannerModel>> get banner => _banner;
 
   BehaviorSubject<List<NewSongModel>> get newSong => _newSong;
@@ -165,4 +171,9 @@ class DiscoverPageBloc {
 
   BehaviorSubject<List<RecommendSongListModel>> get recommendSongList =>
       _recommendSongList;
+
+  List<BannerModel> get defaultBanner => _defaultBanner;
+  List<NewSongModel> get defaultNewSong => _defaultNewSong;
+  List<NewAlbumModel> get defaultNewAlbum => _defaultNewAlbum;
+  List<RecommendSongListModel> get defaultRecommendSongList => _defaultRecommendSongList;
 }

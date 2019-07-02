@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter_netease_cloud/services/global_bloc.dart';
+import 'package:flutter_netease_cloud/services/index_page/index_page_bloc.dart';
+import 'package:flutter_netease_cloud/utils/database_helper/database_helper.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ void main() {
         SystemUiOverlayStyle(statusBarColor: Colors.transparent);
     SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
   }
+  IndexPageBloc.discoverPageBloc.initLocalData();
 
   runApp(MyApp());
 }
@@ -66,6 +69,7 @@ class _MyAppState extends State<MyApp> {
     _globalBloc.dispose();
     stream?.cancel();
     networkSubscription?.cancel();
+    DBHelper.db.close();
     super.dispose();
   }
 

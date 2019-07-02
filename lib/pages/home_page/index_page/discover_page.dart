@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_netease_cloud/config/constants.dart';
 import 'package:flutter_netease_cloud/services/index_page/discover_page/banner/banner.dart';
+import 'package:flutter_netease_cloud/services/index_page/discover_page/discover_page_bloc.dart';
+import 'package:flutter_netease_cloud/services/index_page/discover_page/new_album/new_album.dart';
 import 'package:flutter_netease_cloud/services/index_page/discover_page/new_song/new_song.dart';
 import 'package:flutter_netease_cloud/services/index_page/discover_page/recommend_song_list/recommend_song_list.dart';
 import 'package:flutter_netease_cloud/services/index_page/index_page_bloc.dart';
@@ -19,6 +21,11 @@ class DiscoverPage extends StatefulWidget {
 }
 
 class _DiscoverPageState extends State<DiscoverPage> {
+  List<BannerModel> _banners = IndexPageBloc.discoverPageBloc.defaultBanner;
+  List<RecommendSongListModel> _recommendSongList = IndexPageBloc.discoverPageBloc.defaultRecommendSongList;
+  List<NewAlbumModel> _newAlbums = IndexPageBloc.discoverPageBloc.defaultNewAlbum;
+  List<NewSongModel> _newSongs = IndexPageBloc.discoverPageBloc.defaultNewSong;
+
   @override
   void initState() {
     IndexPageBloc.discoverPageBloc.getBannerList();
@@ -72,6 +79,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
+    print("start render");
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -94,12 +102,15 @@ class _DiscoverPageState extends State<DiscoverPage> {
       body: ListView(
         // padding: Constants.safeEdge,
         children: <Widget>[
-          BannerList(),
+          BannerList(defaultData: _banners),
           SubNav(),
-          RecommendedSongList(),
+          RecommendedSongList(defaultData: _recommendSongList),
           ChangeNotifierProvider<DiscoveryState>(
             builder: (_) => DiscoveryState(),
-            child: NewSongAndAlbums(),
+            child: NewSongAndAlbums(
+              defaultSong: _newSongs,
+              defaultAlbum: _newAlbums,
+            ),
           )
         ],
       ),
@@ -108,11 +119,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
 }
 
 class BannerList extends StatelessWidget {
+  final List<BannerModel> defaultData;
+  BannerList({this.defaultData});
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return StreamBuilder(
+      initialData: defaultData,
       // 一定要使用stream，不然接收不到add或addError的数据，只会得到最后的banner数据
       stream: IndexPageBloc.discoverPageBloc.banner.stream,
       builder: (context, snapshot) {
@@ -194,7 +208,6 @@ class BannerList extends StatelessWidget {
             child: Icon(Icons.error),
           );
         } else {
-          print("...........>other");
           return Container(
             width: double.infinity,
             height: 200,
@@ -328,6 +341,8 @@ class SubNav extends StatelessWidget {
 }
 
 class RecommendedSongList extends StatelessWidget {
+  final List<RecommendSongListModel> defaultData;
+  RecommendedSongList({this.defaultData});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -371,6 +386,7 @@ class RecommendedSongList extends StatelessWidget {
             ),
           ),
           StreamBuilder(
+            initialData: defaultData,
             stream: IndexPageBloc.discoverPageBloc.recommendSongList.stream,
             builder: (context, snapshot) =>
                 _buildAlbumsLayout(context, snapshot),
@@ -506,6 +522,9 @@ class RecommendedSongList extends StatelessWidget {
 }
 
 class NewSongAndAlbums extends StatelessWidget {
+  final List<NewSongModel> defaultSong;
+  final List<NewAlbumModel> defaultAlbum;
+  NewSongAndAlbums({this.defaultAlbum, this.defaultSong});
   @override
   Widget build(BuildContext context) {
     final discoveryState = Provider.of<DiscoveryState>(context);

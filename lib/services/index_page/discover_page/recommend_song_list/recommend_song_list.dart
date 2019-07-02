@@ -70,7 +70,7 @@ class RecommendSongListHelper {
           ]);
       return raw;
     } else {
-      return update(ety);
+      return await update(ety);
     }
   }
 
@@ -79,29 +79,29 @@ class RecommendSongListHelper {
       final db = await DBHelper.db.database;
       Batch batch = db.batch();
       batch.delete(_tableName);
-      etys.map((ety) async {
-        var result = await find(ety.id);
+      for (int i = 0; i < etys.length; i++) {
+        var result = await find(etys[i].id);
         if (result == null) {
           batch.rawInsert(
               "INSERT INTO $_tableName (id, picUrl, pageUrl, name, playCount, canDislike, copywriter, highQuality, trackCount, type)"
               " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
               [
-                ety.id,
-                ety.picUrl,
-                ety.pageUrl,
-                ety.name,
-                ety.playCount,
-                ety.canDislike,
-                ety.copywriter,
-                ety.highQuality,
-                ety.trackCount,
-                ety.type
+                etys[i].id,
+                etys[i].picUrl,
+                etys[i].pageUrl,
+                etys[i].name,
+                etys[i].playCount,
+                etys[i].canDislike,
+                etys[i].copywriter,
+                etys[i].highQuality,
+                etys[i].trackCount,
+                etys[i].type
               ]);
         } else {
-          batch.update(_tableName, ety.toJson(),
-              where: "id = ?", whereArgs: [ety.id]);
+          batch.update(_tableName, etys[i].toJson(),
+              where: "id = ?", whereArgs: [etys[i].id]);
         }
-      });
+      }
 
       var result = await batch.commit();
       return result;

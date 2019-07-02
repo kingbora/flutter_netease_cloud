@@ -73,27 +73,28 @@ class BannerHelper {
       final db = await DBHelper.db.database;
       Batch batch = db.batch();
       batch.delete(_tableName);
-      etys.map((ety) async {
-        var result = await find(ety.id);
+      
+      for (int i = 0; i < etys.length; i++) {
+        var result = await find(etys[i].id);
         if (result == null) {
           batch.rawInsert(
               "INSERT INTO $_tableName (id, picUrl, pageUrl, subtitle, titleColor, showAdTag, targetType, targetId)"
-              " VALUES (?, ?, ?, ?, ?, ?, ?)",
+              " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
               [
-                ety.id,
-                ety.picUrl,
-                ety.pageUrl,
-                ety.subtitle,
-                ety.titleColor,
-                ety.showAdTag,
-                ety.targetType,
-                ety.targetId
+                etys[i].id,
+                etys[i].picUrl,
+                etys[i].pageUrl,
+                etys[i].subtitle,
+                etys[i].titleColor,
+                etys[i].showAdTag,
+                etys[i].targetType,
+                etys[i].targetId
               ]);
         } else {
-          batch.update(_tableName, ety.toJson(),
-              where: "id = ?", whereArgs: [ety.id]);
+          batch.update(_tableName, etys[i].toJson(),
+              where: "id = ?", whereArgs: [etys[i].id]);
         }
-      });
+      }
 
       var result = await batch.commit();
       return result;

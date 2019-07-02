@@ -30,7 +30,6 @@ class DBHelper {
     String path = await initDeleteDB(init);
     _database = await openDatabase(path, version: 1, onOpen: (db) {},
         onCreate: (Database db, int version) async {
-      print("start:-------------------------------------->1");
       await db.execute('''
       CREATE TABLE IF NOT EXISTS ${DBConfig.newAlbumTableName}(
         id INTEGER PRIMARY KEY,
@@ -40,8 +39,6 @@ class DBHelper {
         artistsName TEXT
       );
       ''');
-
-      print("start:-------------------------------------->2");
       await db.execute('''
       CREATE TABLE IF NOT EXISTS ${DBConfig.newSongTableName}(
         id INTEGER PRIMARY KEY,
@@ -50,7 +47,6 @@ class DBHelper {
         artistsName TEXT
       );
       ''');
-      print("start:-------------------------------------->3");
       await db.execute('''
       CREATE TABLE IF NOT EXISTS ${DBConfig.recommendSongListTableName}(
         id INTEGER PRIMARY KEY,
@@ -65,7 +61,6 @@ class DBHelper {
         type INTEGER
       );
       ''');
-      print("start:-------------------------------------->4");
       await db.execute('''
       CREATE TABLE IF NOT EXISTS ${DBConfig.bannerTableName}(
         id INTEGER PRIMARY KEY,
@@ -78,7 +73,6 @@ class DBHelper {
         targetId INTEGER
       );
       ''');
-      print("start:-------------------------------------->5");
     });
   }
 
@@ -98,5 +92,10 @@ class DBHelper {
     }
 
     return path;
+  }
+
+  close() async {
+    var db = await database;
+    return db.close();
   }
 }

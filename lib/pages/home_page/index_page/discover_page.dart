@@ -1,12 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_netease_cloud/blocs/global_bloc.dart';
+import 'package:flutter_netease_cloud/blocs/index_page/bloc.dart';
+import 'package:flutter_netease_cloud/model/index_page/index_page_models.dart';
 import 'package:flutter_netease_cloud/config/constants.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/banner/banner.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/discover_page_bloc.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/new_album/new_album.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/new_song/new_song.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/recommend_song_list/recommend_song_list.dart';
-import 'package:flutter_netease_cloud/services/index_page/index_page_bloc.dart';
 import 'package:flutter_netease_cloud/states/discovery_state/discovery_state.dart';
 import 'package:flutter_netease_cloud/widgets/cached_image/cached_image.dart';
 import 'package:flutter_netease_cloud/widgets/music_player_wave/music_player_wave.dart';
@@ -15,33 +13,8 @@ import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:flutter_netease_cloud/utils/utils.dart';
 import 'package:provider/provider.dart';
 
-class DiscoverPage extends StatefulWidget {
-  @override
-  _DiscoverPageState createState() => _DiscoverPageState();
-}
-
-class _DiscoverPageState extends State<DiscoverPage> {
-  List<BannerModel> _banners = IndexPageBloc.discoverPageBloc.defaultBanner;
-  List<RecommendSongListModel> _recommendSongList = IndexPageBloc.discoverPageBloc.defaultRecommendSongList;
-  List<NewAlbumModel> _newAlbums = IndexPageBloc.discoverPageBloc.defaultNewAlbum;
-  List<NewSongModel> _newSongs = IndexPageBloc.discoverPageBloc.defaultNewSong;
-
-  @override
-  void initState() {
-    IndexPageBloc.discoverPageBloc.getBannerList();
-    IndexPageBloc.discoverPageBloc.getRecommendSongList();
-    IndexPageBloc.discoverPageBloc.getNewAlbumList();
-    IndexPageBloc.discoverPageBloc.getNewSong(const {"type": 0});
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    IndexPageBloc.discoverPageBloc.dispose();
-    super.dispose();
-  }
-
-  Widget get searchBar => InkWell(
+class DiscoverPage extends StatelessWidget {
+  Widget getsearchBar(BuildContext context) => InkWell(
         onTap: () {
           showSearch(context: context, delegate: SearchBarDelegate());
         },
@@ -79,7 +52,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    print("start render");
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -94,44 +66,56 @@ class _DiscoverPageState extends State<DiscoverPage> {
         ),
         titleSpacing: 0,
         centerTitle: true,
-        title: searchBar,
+        title: getsearchBar(context),
         actions: <Widget>[MusicPlayerWave()],
         elevation: 0.0,
         backgroundColor: Colors.white,
       ),
-      body: ListView(
-        // padding: Constants.safeEdge,
-        children: <Widget>[
-          BannerList(defaultData: _banners),
-          SubNav(),
-          RecommendedSongList(defaultData: _recommendSongList),
-          ChangeNotifierProvider<DiscoveryState>(
-            builder: (_) => DiscoveryState(),
-            child: NewSongAndAlbums(
-              defaultSong: _newSongs,
-              defaultAlbum: _newAlbums,
-            ),
-          )
-        ],
+      body: BlocProvider(
+        builder: (_) {
+          return GlobalBloc.indexPageBloc..dispatch(InitialPage());
+        },
+        child: ListView(
+          // padding: Constants.safeEdge,
+          children: <Widget>[
+            BannerList(),
+            SubNav(),
+            RecommendedSongList(),
+            ChangeNotifierProvider<DiscoveryState>(
+              builder: (_) => DiscoveryState(),
+              child: NewSongAndAlbums(),
+            )
+          ],
+        ),
       ),
     );
   }
 }
 
 class BannerList extends StatelessWidget {
-  final List<BannerModel> defaultData;
-  BannerList({this.defaultData});
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-
-    return StreamBuilder(
-      initialData: defaultData,
-      // 一定要使用stream，不然接收不到add或addError的数据，只会得到最后的banner数据
-      stream: IndexPageBloc.discoverPageBloc.banner.stream,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<BannerModel> bannerList = snapshot.data;
+    final _indexPageBloc = BlocProvider.of<IndexPageBloc>(context);
+    return BlocBuilder(
+      bloc: _indexPageBloc,
+      builder: (context, IndexPageState state) {
+        print("<-------------------banners-------------------------->");
+        print(state);
+        print("<-------------------banners-------------------------->");
+        if (state is InitialDataLoaded || state is InitialDataState) {
+          List<BannerModel> bannerList;
+          if (state is InitialDataLoaded) {
+            bannerList = state.bannerList;
+          } else if (state is InitialDataState) {
+            bannerList = state.bannerList;
+            print(bannerList.length);
+            if (bannerList.length <= 0) {
+              return SizedBox(
+                height: 150,
+              );
+            }
+          }
           if (bannerList.length > 0) {
             return Container(
               width: screenWidth,
@@ -201,16 +185,16 @@ class BannerList extends StatelessWidget {
               ),
             );
           }
-        } else if (snapshot.hasError) {
+        } else if (state is LoadCatchError) {
           return Container(
             width: double.infinity,
-            height: 200,
+            height: 150,
             child: Icon(Icons.error),
           );
         } else {
           return Container(
             width: double.infinity,
-            height: 200,
+            height: 150,
             child: CupertinoActivityIndicator(),
           );
         }
@@ -341,10 +325,9 @@ class SubNav extends StatelessWidget {
 }
 
 class RecommendedSongList extends StatelessWidget {
-  final List<RecommendSongListModel> defaultData;
-  RecommendedSongList({this.defaultData});
   @override
   Widget build(BuildContext context) {
+    final _indexPageBloc = BlocProvider.of<IndexPageBloc>(context);
     return Container(
       padding: Constants.safeEdge,
       child: Column(
@@ -385,20 +368,33 @@ class RecommendedSongList extends StatelessWidget {
               ],
             ),
           ),
-          StreamBuilder(
-            initialData: defaultData,
-            stream: IndexPageBloc.discoverPageBloc.recommendSongList.stream,
-            builder: (context, snapshot) =>
-                _buildAlbumsLayout(context, snapshot),
+          BlocBuilder(
+            bloc: _indexPageBloc,
+            builder: (context, IndexPageState state) =>
+                _buildAlbumsLayout(context, state),
           ),
         ],
       ),
     );
   }
 
-  _buildAlbumsLayout(context, AsyncSnapshot snapshot) {
-    if (snapshot.hasData) {
-      List<RecommendSongListModel> recommendSongList = snapshot.data;
+  _buildAlbumsLayout(context, IndexPageState state) {
+    print("<-------------------recommends-------------------------->");
+    print(state);
+    print("<-------------------recommends-------------------------->");
+    if (state is InitialDataLoaded || state is InitialDataState) {
+      List<RecommendSongListModel> recommendSongList;
+      if (state is InitialDataLoaded) {
+        recommendSongList = state.recommendSongList;
+      } else if (state is InitialDataState) {
+        recommendSongList = state.recommendSongList;
+        print(recommendSongList.length);
+        if (recommendSongList.length <= 0) {
+          return SizedBox(
+            height: 150,
+          );
+        }
+      }
       if (recommendSongList.length <= 0) {
         return Container(
           height: 150,
@@ -505,16 +501,16 @@ class RecommendedSongList extends StatelessWidget {
           );
         }).toList(),
       );
-    } else if (snapshot.hasError) {
+    } else if (state is LoadCatchError) {
       return Container(
         width: double.infinity,
-        height: 200,
+        height: 150,
         child: Icon(Icons.error),
       );
     } else {
       return Container(
         width: double.infinity,
-        height: 200,
+        height: 150,
         child: CupertinoActivityIndicator(),
       );
     }
@@ -522,9 +518,6 @@ class RecommendedSongList extends StatelessWidget {
 }
 
 class NewSongAndAlbums extends StatelessWidget {
-  final List<NewSongModel> defaultSong;
-  final List<NewAlbumModel> defaultAlbum;
-  NewSongAndAlbums({this.defaultAlbum, this.defaultSong});
   @override
   Widget build(BuildContext context) {
     final discoveryState = Provider.of<DiscoveryState>(context);
@@ -536,6 +529,7 @@ class NewSongAndAlbums extends StatelessWidget {
       color: Colors.black,
       fontSize: 15,
     );
+    final _indexPageBloc = BlocProvider.of<IndexPageBloc>(context);
 
     return Container(
       padding: Constants.safeEdge,
@@ -613,18 +607,18 @@ class NewSongAndAlbums extends StatelessWidget {
             children: <Widget>[
               Offstage(
                 offstage: discoveryState.currentIndex != 0,
-                child: StreamBuilder(
-                  stream: IndexPageBloc.discoverPageBloc.newAlbum.stream,
-                  builder: (context, snapshot) =>
-                      _buildWrapLayout(snapshot, context),
+                child: BlocBuilder(
+                  bloc: _indexPageBloc,
+                  builder: (context, IndexPageState state) =>
+                      _buildAlbumWrapLayout(state, context),
                 ),
               ),
               Offstage(
                 offstage: discoveryState.currentIndex != 1,
-                child: StreamBuilder(
-                  stream: IndexPageBloc.discoverPageBloc.newSong.stream,
-                  builder: (context, snapshot) =>
-                      _buildWrapLayout(snapshot, context),
+                child: BlocBuilder(
+                  bloc: _indexPageBloc,
+                  builder: (context, IndexPageState state) =>
+                      _buildSongWrapLayout(state, context),
                 ),
               )
             ],
@@ -634,9 +628,23 @@ class NewSongAndAlbums extends StatelessWidget {
     );
   }
 
-  _buildWrapLayout(AsyncSnapshot snapshot, BuildContext context) {
-    if (snapshot.hasData) {
-      List list = snapshot.data;
+  _buildAlbumWrapLayout(IndexPageState state, BuildContext context) {
+    print("<-------------------albums-------------------------->");
+    print(state);
+    print("<-------------------albums-------------------------->");
+    if (state is InitialDataLoaded || state is InitialDataState) {
+      List<NewAlbumModel> list;
+      if (state is InitialDataLoaded) {
+        list = state.newAlbumList;
+      } else if (state is InitialDataState) {
+        list = state.newAlbumList;
+        print(list.length);
+        if (list.length <= 0) {
+          return SizedBox(
+            height: 150,
+          );
+        }
+      }
       if (list.length <= 0) {
         return Container(
           height: 150,
@@ -645,62 +653,13 @@ class NewSongAndAlbums extends StatelessWidget {
             child: Text("No Data!"),
           ),
         );
+      } else {
+        return _buildWrapList(list, context);
       }
-      final double width = MediaQuery.of(context).size.width -
-          Constants.safeEdge.left -
-          Constants.safeEdge.right;
-      final double gap = width * 0.1 / 2;
-      final double itemWidth = width * 0.3;
-      // 截取前三个
-      final int len = list.length > 3 ? 3 : list.length;
-      // 圆角值
-      final double radius = 5;
-      return Wrap(
-        spacing: gap,
-        runSpacing: 10,
-        children: List.generate(len, (index) {
-          return Column(
-            children: <Widget>[
-              Stack(
-                children: _buildPositioned(itemWidth, gap, radius, list[index]),
-              ),
-              Container(
-                padding: const EdgeInsets.only(top: 5, bottom: 5),
-                width: itemWidth,
-                height: 44,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      list[index].name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Constants.normalFontColor,
-                        fontSize: 11,
-                      ),
-                    ),
-                    Text(
-                      list[index].artistsName ?? "",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Constants.normalFontColor,
-                        fontSize: 11,
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ],
-          );
-        }).toList(),
-      );
-    } else if (snapshot.hasError) {
+    } else if (state is LoadCatchError) {
       return Container(
         width: double.infinity,
-        height: 200,
+        height: 150,
         child: Icon(Icons.error),
       );
     } else {
@@ -710,6 +669,103 @@ class NewSongAndAlbums extends StatelessWidget {
         child: CupertinoActivityIndicator(),
       );
     }
+  }
+
+  _buildSongWrapLayout(IndexPageState state, BuildContext context) {
+    print("<-------------------songs-------------------------->");
+    print(state);
+    print("<-------------------songs-------------------------->");
+    if (state is InitialDataLoaded || state is InitialDataState) {
+      List<NewSongModel> list;
+      if (state is InitialDataLoaded) {
+        list = state.newSongList;
+      } else if (state is InitialDataState) {
+        list = state.newSongList;
+        print(list.length);
+        if (list.length <= 0) {
+          return SizedBox(
+            height: 150,
+          );
+        }
+      }
+      if (list.length <= 0) {
+        return Container(
+          height: 150,
+          width: double.infinity,
+          child: Center(
+            child: Text("No Data!"),
+          ),
+        );
+      } else {
+        return _buildWrapList(list, context);
+      }
+    } else if (state is LoadCatchError) {
+      return Container(
+        width: double.infinity,
+        height: 150,
+        child: Icon(Icons.error),
+      );
+    } else {
+      return Container(
+        width: double.infinity,
+        height: 100,
+        child: CupertinoActivityIndicator(),
+      );
+    }
+  }
+
+  Widget _buildWrapList(list, context) {
+    final double width = MediaQuery.of(context).size.width -
+        Constants.safeEdge.left -
+        Constants.safeEdge.right;
+    final double gap = width * 0.1 / 2;
+    final double itemWidth = width * 0.3;
+    // 截取前三个
+    final int len = list.length > 3 ? 3 : list.length;
+    // 圆角值
+    final double radius = 5;
+    return Wrap(
+      spacing: gap,
+      runSpacing: 10,
+      children: List.generate(len, (index) {
+        return Column(
+          children: <Widget>[
+            Stack(
+              children: _buildPositioned(itemWidth, gap, radius, list[index]),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 5, bottom: 5),
+              width: itemWidth,
+              height: 44,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    list[index].name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Constants.normalFontColor,
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(
+                    list[index].artistsName ?? "",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Constants.normalFontColor,
+                      fontSize: 11,
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
   }
 
   List<Widget> _buildPositioned(itemWidth, gap, radius, item) {

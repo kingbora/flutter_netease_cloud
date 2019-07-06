@@ -1,46 +1,57 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_netease_cloud/config/address.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/banner/banner.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/new_album/new_album.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/new_song/new_song.dart';
-import 'package:flutter_netease_cloud/services/index_page/discover_page/recommend_song_list/recommend_song_list.dart';
 import 'package:flutter_netease_cloud/utils/http_manager/http_manager.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:flutter_netease_cloud/model/index_page/index_page_models.dart';
+import 'package:flutter_netease_cloud/utils/database_helper/localization_helps.dart';
 
-class DiscoverPageBloc {
-  BehaviorSubject<List<BannerModel>> _banner;
-  BehaviorSubject<List<NewSongModel>> _newSong;
-  BehaviorSubject<List<NewAlbumModel>> _newAlbum;
-  BehaviorSubject<List<RecommendSongListModel>> _recommendSongList;
-  List<BannerModel> _defaultBanner = const [];
-  List<NewSongModel> _defaultNewSong = const [];
-  List<NewAlbumModel> _defaultNewAlbum = const [];
-  List<RecommendSongListModel> _defaultRecommendSongList = const [];
+class InitialIndexPageState {
+  final List<BannerModel> initialBannerList;
+  final List<RecommendSongListModel> initialRecommendSongList;
+  final List<NewAlbumModel> initialNewAlbumList;
+  final List<NewSongModel> initialNewSongList;
 
-  DiscoverPageBloc() {
-    _banner = new BehaviorSubject<List<BannerModel>>();
-    _newSong = new BehaviorSubject<List<NewSongModel>>();
-    _newAlbum = new BehaviorSubject<List<NewAlbumModel>>();
-    _recommendSongList = new BehaviorSubject<List<RecommendSongListModel>>();
+  const InitialIndexPageState({
+    this.initialBannerList,
+    this.initialNewAlbumList,
+    this.initialNewSongList,
+    this.initialRecommendSongList,
+  });
+}
+
+class IndexPageService {
+  getLocalStoreData() async {
+    final initialBannerList = await BannerHelper.helper.findAll();
+    final initialRecommendSongList = await RecommendSongListHelper.helper.findAll();
+    final initialNewAlbumList = await NewAlbumHelper.helper.findAll();
+    final initialNewSongList = await NewSongHelper.helper.findAll();
+    print("initial data get");
+    return InitialIndexPageState(
+      initialBannerList: initialBannerList,
+      initialNewAlbumList: initialNewAlbumList,
+      initialNewSongList: initialNewSongList,
+      initialRecommendSongList: initialRecommendSongList,
+    );
   }
 
-  initLocalData() async {
-    print("init");
-    _defaultBanner = await BannerHelper.helper.findAll();
-    _defaultNewSong = await NewSongHelper.helper.findAll();
-    _defaultNewAlbum = await NewAlbumHelper.helper.findAll();
-    _defaultRecommendSongList = await RecommendSongListHelper.helper.findAll();
+  getInitialPageData() async {
+    final initialBannerList = await getBannerList(const {"type": 1});
+    final initialRecommendSongList = await getRecommendSongList();
+    final initialNewAlbumList = await getNewAlbumList();
+    final initialNewSongList = await getNewSong(const {"type": 7});
+    print("data get finished");
+    return InitialIndexPageState(
+      initialBannerList: initialBannerList,
+      initialNewAlbumList: initialNewAlbumList,
+      initialNewSongList: initialNewSongList,
+      initialRecommendSongList: initialRecommendSongList,
+    );
   }
 
-  void getBannerList() async {
+  getBannerList(Map<String, dynamic> param) async {
     var result = await httpManager
-        .fetch(HttpRequests(url: Address.getBanners(), query: {"type": "1"}));
-
+        .fetch(HttpRequests(url: Address.getBanners(), query: param));
     if (result.hasError) {
-      print("error---------->");
-      _banner.sink.addError(result);
+      return result;
     } else {
-      print("success----------->");
       List<BannerModel> banners = [];
       for (int i = 0; i < result.data['banners'].length; i++) {
         final item = result.data['banners'][i];
@@ -57,15 +68,15 @@ class DiscoverPageBloc {
         banners.add(bannerItem);
       }
       await BannerHelper.helper.addAll(banners);
-      _banner.sink.add(banners);
+      return banners;
     }
   }
 
-  void getNewAlbumList() async {
+  getNewAlbumList() async {
     var result =
         await httpManager.fetch(HttpRequests(url: Address.getNewAlbumList()));
     if (result.hasError) {
-      _newSong.sink.addError(result);
+      return result;
     } else {
       List<NewAlbumModel> newAlbums = [];
       await NewAlbumHelper.helper.deleteAll();
@@ -85,15 +96,15 @@ class DiscoverPageBloc {
         newAlbums.add(albumItem);
       }
       NewAlbumHelper.helper.addAll(newAlbums);
-      _newAlbum.sink.add(newAlbums);
+      return newAlbums;
     }
   }
 
-  void getNewSong(Map<String, dynamic> params) async {
+  getNewSong(Map<String, dynamic> params) async {
     var result = await httpManager
         .fetch(HttpRequests(url: Address.getNewSongList(), query: params));
     if (result.hasError) {
-      _newSong.sink.addError(result);
+      return result;
     } else {
       List<NewSongModel> newSongs = [];
       await NewSongHelper.helper.deleteAll();
@@ -112,16 +123,16 @@ class DiscoverPageBloc {
         newSongs.add(songItem);
       }
       NewSongHelper.helper.addAll(newSongs);
-      _newSong.sink.add(newSongs);
+      return newSongs;
     }
   }
 
-  void getRecommendSongList() async {
+  getRecommendSongList() async {
     var result = await httpManager.fetch(HttpRequests(
       url: Address.getRecommendSongList(),
     ));
     if (result.hasError) {
-      _recommendSongList.sink.addError(result);
+      return result;
     } else {
       List<RecommendSongListModel> recommendSongList = [];
       await RecommendSongListHelper.helper.deleteAll();
@@ -142,38 +153,7 @@ class DiscoverPageBloc {
         recommendSongList.add(recommendSongItem);
       }
       RecommendSongListHelper.helper.addAll(recommendSongList);
-      _recommendSongList.sink.add(recommendSongList);
+      return recommendSongList;
     }
   }
-
-  dispose() {
-    if (!_banner.isClosed) {
-      _banner.close();
-    }
-    if (!_newSong.isClosed) {
-      _newSong.close();
-    }
-    if (!_newAlbum.isClosed) {
-      _newAlbum.close();
-    }
-    if (!_recommendSongList.isClosed) {
-      _recommendSongList.close();
-    }
-  }
-
-  static DiscoverPageBloc of(BuildContext context) => (context.ancestorInheritedElementForWidgetOfExactType(DiscoverPageBloc) as DiscoverPageBloc);
-
-  BehaviorSubject<List<BannerModel>> get banner => _banner;
-
-  BehaviorSubject<List<NewSongModel>> get newSong => _newSong;
-
-  BehaviorSubject<List<NewAlbumModel>> get newAlbum => _newAlbum;
-
-  BehaviorSubject<List<RecommendSongListModel>> get recommendSongList =>
-      _recommendSongList;
-
-  List<BannerModel> get defaultBanner => _defaultBanner;
-  List<NewSongModel> get defaultNewSong => _defaultNewSong;
-  List<NewAlbumModel> get defaultNewAlbum => _defaultNewAlbum;
-  List<RecommendSongListModel> get defaultRecommendSongList => _defaultRecommendSongList;
 }

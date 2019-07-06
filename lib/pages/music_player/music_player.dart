@@ -1,22 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_netease_cloud/config/constants.dart';
 
-class MusicPlayer extends StatefulWidget {
-  @override
-  _MusicPlayerState createState() => _MusicPlayerState();
-}
-
-class _MusicPlayerState extends State<MusicPlayer> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
+class MusicPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,17 +61,26 @@ class _MusicPlayerState extends State<MusicPlayer> {
                 ),
               ],
             ),
-            body: Column(
-              children: <Widget>[
-                Expanded(
-                  child: Center(
-                    child: Text("123"),
+            body: Theme(
+              data: Theme.of(context).copyWith(
+                  iconTheme: IconThemeData(
+                color: Colors.white,
+              )),
+              child: Container(
+                padding: Constants.safeEdge,
+                child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: Center(
+                      child: Text("123"),
+                    ),
                   ),
-                ),
-                buildToolsPlatForm(),
-                buildProgressBar(),
-                buildControlPlatForm(),
-              ],
+                  buildToolsPlatForm(),
+                  buildProgressBar(),
+                  buildControlPlatForm(),
+                ],
+              ),
+              ),
             ),
           )
         ],
@@ -94,38 +89,75 @@ class _MusicPlayerState extends State<MusicPlayer> {
   }
 
   Widget buildProgressBar() {
-    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Text("00:00", style: TextStyle(
+          color: Colors.white54,
+          fontSize: 9,
+        ),),
+        Expanded(
+          child: Stack(
+            children: <Widget>[
+              Container(
+                margin: const EdgeInsets.all(3),
+                height: 2,
+                decoration: BoxDecoration(
+                  color: Colors.white30,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+              Positioned(
+                left: 3,
+                child: Container(
+                  height: 8,
+                  width: 8,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+        Text("03:34", style: TextStyle(
+          color: Colors.white54,
+          fontSize: 9,
+        ),),
+      ],
+    ),
+    );
   }
 
   Widget buildToolsPlatForm() {
     return Container(
-      height: 60,
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Container(
-            width: 40,
-            height: 40,
-            color: Colors.amber,
+          IconButton(
+            icon: Image.asset("assets/images/uncollected.png", color: Colors.white, width: 20,),
+            onPressed: () {},
           ),
-          Container(
-            width: 40,
-            height: 40,
-            color: Colors.amberAccent,
+          IconButton(
+            icon: Image.asset("assets/images/download.png", color: Colors.white, width: 28,),
+            onPressed: () {},
           ),
-          Container(
-            width: 40,
-            height: 40,
-            color: Colors.blueAccent,
+          IconButton(
+            icon: Image.asset("assets/images/whale_sound_effects.png", color: Colors.white, width: 24,),
+            onPressed: () {},
           ),
-          Container(
-            width: 40,
-            height: 40,
-            color: Colors.cyanAccent,
+          IconButton(
+            icon: Image.asset("assets/images/message.png", color: Colors.white, width: 24,),
+            onPressed: () {},
           ),
-          Container(
-            width: 40,
-            height: 40,
-            color: Colors.deepPurple,
+          IconButton(
+            icon: Image.asset("assets/images/more_vert.png", color: Colors.white, width: 28,),
+            onPressed: () {},
           )
         ],
       ),
@@ -134,10 +166,48 @@ class _MusicPlayerState extends State<MusicPlayer> {
 
   Widget buildControlPlatForm() {
     return Container(
-      color: Colors.white,
-      height: 80,
-      width: double.infinity,
-      child: Text("123"),
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          IconButton(
+            icon: Image.asset("assets/images/loop_play.png", color: Colors.white, width: 24,),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: Image.asset("assets/images/back_icon.png", color: Colors.white, width: 18,),
+            onPressed: () {},
+          ),
+          Container(
+            width: 50,
+            height: 50,
+            padding: const EdgeInsets.only(
+              left: 3
+            ),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 1,
+              )
+            ),
+            child: IconButton(
+              icon: Image.asset("assets/images/play_icon.png", color: Colors.white, width: 18,),
+              onPressed: () {},
+            ),
+          ),
+          IconButton(
+            icon: Image.asset("assets/images/forward_icon.png", color: Colors.white, width: 18,),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: Image.asset("assets/images/play_list.png", color: Colors.white, width: 24,),
+            onPressed: () {},
+          )
+        ],
+      ),
     );
   }
 }

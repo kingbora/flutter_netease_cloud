@@ -1,4 +1,4 @@
-import 'package:flutter_netease_cloud/blocs/index_page/index_page_bloc.dart';
+import 'package:flutter_netease_cloud/blocs/index_page/discover_page/index_page_bloc.dart';
 
 class GlobalBloc {
   static final IndexPageBloc indexPageBloc = new IndexPageBloc();

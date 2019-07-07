@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter_netease_cloud/blocs/global_bloc.dart';
+import 'package:flutter_netease_cloud/pages/music_player/music_player.dart';
 import 'package:flutter_netease_cloud/utils/database_helper/database_helper.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:fluro/fluro.dart';
@@ -90,7 +91,7 @@ class _MyAppState extends State<MyApp> {
         ),
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: RedirectPage(),
+      home: MusicPlayer(),
     );
   }
 }

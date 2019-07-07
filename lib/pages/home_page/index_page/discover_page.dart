@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_netease_cloud/blocs/global_bloc.dart';
-import 'package:flutter_netease_cloud/blocs/index_page/bloc.dart';
+import 'package:flutter_netease_cloud/blocs/index_page/discover_page/bloc.dart';
 import 'package:flutter_netease_cloud/model/index_page/index_page_models.dart';
 import 'package:flutter_netease_cloud/config/constants.dart';
 import 'package:flutter_netease_cloud/states/discovery_state/discovery_state.dart';

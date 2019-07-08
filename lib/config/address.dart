@@ -23,4 +23,12 @@ class Address {
   static getNewAlbumList() {
     return "$baseUrl/album/newest";
   }
+
+  static loginByPhone() {
+    return "$baseUrl/login/cellphone";
+  }
+
+  static loginByEmail() {
+    return "$baseUrl/login";
+  }
 }

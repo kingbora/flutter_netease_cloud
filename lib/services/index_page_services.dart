@@ -1,4 +1,5 @@
 import 'package:flutter_netease_cloud/config/address.dart';
+import 'package:flutter_netease_cloud/config/application.dart';
 import 'package:flutter_netease_cloud/utils/http_manager/http_manager.dart';
 import 'package:flutter_netease_cloud/model/index_page/index_page_models.dart';
 import 'package:flutter_netease_cloud/utils/database_helper/localization_helps.dart';
@@ -47,7 +48,7 @@ class IndexPageService {
   }
 
   getBannerList(Map<String, dynamic> param) async {
-    var result = await httpManager
+    var result = await Application.httpManager
         .fetch(HttpRequests(url: Address.getBanners(), query: param));
     if (result.hasError) {
       return result;
@@ -74,7 +75,7 @@ class IndexPageService {
 
   getNewAlbumList() async {
     var result =
-        await httpManager.fetch(HttpRequests(url: Address.getNewAlbumList()));
+        await Application.httpManager.fetch(HttpRequests(url: Address.getNewAlbumList()));
     if (result.hasError) {
       return result;
     } else {
@@ -101,7 +102,7 @@ class IndexPageService {
   }
 
   getNewSong(Map<String, dynamic> params) async {
-    var result = await httpManager
+    var result = await Application.httpManager
         .fetch(HttpRequests(url: Address.getNewSongList(), query: params));
     if (result.hasError) {
       return result;
@@ -128,7 +129,7 @@ class IndexPageService {
   }
 
   getRecommendSongList() async {
-    var result = await httpManager.fetch(HttpRequests(
+    var result = await Application.httpManager.fetch(HttpRequests(
       url: Address.getRecommendSongList(),
     ));
     if (result.hasError) {

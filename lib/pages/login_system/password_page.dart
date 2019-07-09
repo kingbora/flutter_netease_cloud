@@ -35,8 +35,8 @@ class PasswordInputPage extends StatelessWidget {
     return Consumer<LoginSystemState>(
       builder: (BuildContext context, loginState, child) {
         return LoadingHelper.wrapLoadingBody(
-          backgroundColor: Colors.black54,
-          loadingBgColor: Colors.transparent,
+          backgroundColor: Colors.transparent,
+          loadingBgColor: Colors.black54,
           loading: loginState.isLogin,
           child: Container(
             padding: Constants.safeEdge,
@@ -55,6 +55,7 @@ class PasswordInputPage extends StatelessWidget {
                     onEditingComplete: () => doLogin(context),
                     onSubmitted: (String str) => doLogin(context),
                     focusNode: _focusNode,
+                    obscureText: true,
                     decoration: InputDecoration(
                       hintText: "输入密码",
                       hintStyle: TextStyle(
@@ -132,7 +133,7 @@ class PasswordInputPage extends StatelessWidget {
         FocusScope.of(context).requestFocus(_focusNode);
         Fluttertoast.showToast(msg: result.data['message']);
       } else {
-        Routes.routers.navigateTo(context, Routes.homePage);
+        Routes.routers.navigateTo(context, Routes.homePage, clearStack: true);
       }
     }
   }

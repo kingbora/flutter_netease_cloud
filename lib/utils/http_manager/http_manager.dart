@@ -1,7 +1,9 @@
 import 'dart:io';
-
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:path/path.dart';
 import 'package:flutter_netease_cloud/config/config.dart';
 import 'package:flutter_netease_cloud/utils/http_manager/response_format.dart';
 import 'package:flutter_netease_cloud/utils/http_manager/status_code.dart';
@@ -50,6 +52,19 @@ class HttpManager {
       requestBody: Config.DEBUG,
       responseBody: Config.DEBUG,
     ));
+    cookieManager();
+    print("123");
+  }
+
+  cookieManager() async {
+    Directory tempDir = await getTemporaryDirectory();
+    final String path = join(tempDir.path, "cookie");
+    try {
+      await Directory(dirname(path)).create(recursive: true);
+    } catch (e) {
+      print(e);
+    }
+    _dio.interceptors.add(CookieManager(PersistCookieJar(dir: path)));
   }
 
   /// 发起http请求
@@ -85,11 +100,10 @@ class HttpManager {
     }
 
     return ResponseFormat(
-      data: response.data,
-      hasError: false,
-      statusCode: response.statusCode,
-      headers: response.headers
-    );
+        data: response.data,
+        hasError: false,
+        statusCode: response.statusCode,
+        headers: response.headers);
   }
 
   /// 批量请求
@@ -97,10 +111,16 @@ class HttpManager {
   batchFetch(List<HttpRequests> requests, {bool isAsync = false}) {}
 
   /// 远程文件下载
-  downloadFile(String urlPath, {String savePath, onReceiveProgress, Options option}) async {
+  downloadFile(String urlPath,
+      {String savePath, onReceiveProgress, Options option}) async {
     Response response;
     try {
-      response = await _dio.download(urlPath, savePath, onReceiveProgress: onReceiveProgress, options: option,);
+      response = await _dio.download(
+        urlPath,
+        savePath,
+        onReceiveProgress: onReceiveProgress,
+        options: option,
+      );
     } on DioError catch (e) {
       StatusCode.handlerError(e);
     }
@@ -133,8 +153,6 @@ class HttpManager {
     }
   }
 }
-
-final HttpManager httpManager = new HttpManager();
 
 /// http请求内容
 class HttpRequests {
